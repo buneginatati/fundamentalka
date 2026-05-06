@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Фундаменталка — Инвестиции просто</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Локально: investprosto-design.css. В проде заменить на:
+     https://buneginatati.github.io/design-system/investprosto-design.css -->
+<link rel="stylesheet" href="investprosto-design.css">
+<style>
+  /* Локальные дополнения, специфичные только для Фундаменталки */
+  .stub-block {
+    padding: 28px 20px;
+    border: 1.5px dashed var(--green-border-strong);
+    border-radius: 12px;
+    background: var(--green-bg);
+    text-align: center;
+    color: var(--green);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .stub-block b { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+  .stub-block .stub-todo { color: var(--muted); font-size: 11px; margin-top: 12px; font-weight: 500; }
+
+  .profile-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+  .profile-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 12px 14px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .profile-label {
+    font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .profile-value { font-size: 15px; font-weight: 700; color: var(--black); text-align: right; }
+
+  .ticker-pill {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    background: var(--green); color: var(--white);
+    font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .nav-back-link {
+    display: inline-block; padding: 10px 16px; margin-bottom: 14px;
+    background: transparent; border: 1.5px solid var(--green-border-strong);
+    border-radius: 8px; color: var(--green); font-size: 12px;
+    font-weight: 700; cursor: pointer; text-decoration: none;
+  }
+  .nav-back-link:hover { background: var(--green); color: var(--white); }
+  .empty-state {
+    padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" stroke="#3B3FBF" stroke-width="2"/>
+      <path d="M12 20 L18 26 L28 14" stroke="#3B3FBF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div>
+    <h1>Фундаменталка</h1>
+    <p>Анализ эмитента · Академия «Инвестиции просто»</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="search">Поиск</button>
+  <button class="tab" data-tab="profile">Профиль</button>
+  <button class="tab" data-tab="financials">Финансы</button>
+  <button class="tab" data-tab="multipliers">Мультипликаторы</button>
+  <button class="tab" data-tab="dividends">Дивиденды</button>
+  <button class="tab" data-tab="insiders">Инсайдеры</button>
+  <button class="tab" data-tab="calendar">Календарь</button>
+  <button class="tab" data-tab="compare">Сравнение</button>
+</div>
+
+<div class="content">
+
+  <!-- ПОИСК -->
+  <div class="tab-content active" id="tab-search">
+    <h3 class="section-title">Найти эмитента</h3>
+    <div class="moex-search-wrap">
+      <input class="input-field moex-input" id="moexSearch" placeholder="Тикер или название (например, SBER, Газпром)">
+      <button class="moex-search-btn" id="moexSearchBtn">Найти</button>
+    </div>
+    <div class="moex-status" id="moexStatus"></div>
+    <div class="moex-results" id="moexResults"></div>
+  </div>
+
+  <!-- ПРОФИЛЬ -->
+  <div class="tab-content" id="tab-profile">
+    <div id="profile-empty" class="empty-state">
+      Сначала выбери эмитента во вкладке «Поиск».
+    </div>
+    <div id="profile-loaded" style="display:none;">
+      <h3 class="section-title">Профиль эмитента</h3>
+      <div class="profile-grid">
+        <div class="profile-row">
+          <span class="profile-label">Название</span>
+          <span class="profile-value" id="prof-name">—</span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">Тикер</span>
+          <span class="profile-value"><span class="ticker-pill" id="prof-ticker">—</span></span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">ISIN</span>
+          <span class="profile-value" id="prof-isin">—</span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">Тип бумаги</span>
+          <span class="profile-value" id="prof-type">—</span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">Цена (последняя)</span>
+          <span class="profile-value" id="prof-price">—</span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">Капитализация</span>
+          <span class="profile-value" id="prof-cap">—</span>
+        </div>
+        <div class="profile-row">
+          <span class="profile-label">Уровень листинга</span>
+          <span class="profile-value" id="prof-list">—</span>
+        </div>
+      </div>
+
+      <div class="stub-block">
+        <b>📋 Краткая справка о компании</b>
+        Подтянется из Supabase: что за бизнес, как зарабатывает, ключевые направления.
+        <div class="stub-todo">TODO: SELECT description FROM emitters WHERE ticker = ?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФИНАНСЫ -->
+  <div class="tab-content" id="tab-financials">
+    <h3 class="section-title">Финансовые показатели</h3>
+    <div class="stub-block">
+      <b>📊 Графики за 4–8 периодов</b>
+      Выручка, операционная прибыль, чистая прибыль, EBITDA, OCF, FCF.
+      <div class="stub-todo">TODO: SELECT * FROM report_financials WHERE emitter_id = ? ORDER BY period_end</div>
+    </div>
+  </div>
+
+  <!-- МУЛЬТИПЛИКАТОРЫ -->
+  <div class="tab-content" id="tab-multipliers">
+    <h3 class="section-title">Мультипликаторы (история)</h3>
+    <div class="stub-block">
+      <b>📈 P/E, P/B, P/S, EV/EBITDA, ROE, ROA, D/E, дивдоходность</b>
+      История за 3–5 лет, графики + таблица текущих значений из таблицы fundamentals.
+      <div class="stub-todo">TODO: SELECT * FROM fundamentals WHERE emitter_id = ?<br>+ история через report_financials.</div>
+    </div>
+  </div>
+
+  <!-- ДИВИДЕНДЫ -->
+  <div class="tab-content" id="tab-dividends">
+    <h3 class="section-title">Дивидендная история</h3>
+    <div class="stub-block">
+      <b>💰 Выплаты, отсечки, ГЭП</b>
+      История выплат, ближайшая отсечка, статистика закрытия дивидендного гэпа.
+      <div class="stub-todo">TODO: SELECT * FROM dividends WHERE emitter_id = ? ORDER BY ex_date DESC</div>
+    </div>
+  </div>
+
+  <!-- ИНСАЙДЕРЫ -->
+  <div class="tab-content" id="tab-insiders">
+    <h3 class="section-title">Сделки инсайдеров (12 мес.)</h3>
+    <div class="stub-block">
+      <b>👤 Кто, когда, сколько, направление</b>
+      Покупки/продажи акций должностными лицами компании за последний год.
+      <div class="stub-todo">TODO: SELECT * FROM insider_trades WHERE emitter_id = ? AND date &gt;= NOW() - INTERVAL '12 months'</div>
+    </div>
+  </div>
+
+  <!-- КАЛЕНДАРЬ -->
+  <div class="tab-content" id="tab-calendar">
+    <h3 class="section-title">Корпоративный календарь (90 дней)</h3>
+    <div class="stub-block">
+      <b>📅 Отчётности, дивотсечки, ГОСА, рекомендации СД</b>
+      События в ближайшие 90 дней.
+      <div class="stub-todo">TODO: SELECT * FROM corporate_events WHERE emitter_id = ? AND event_date BETWEEN NOW() AND NOW() + INTERVAL '90 days'</div>
+    </div>
+  </div>
+
+  <!-- СРАВНЕНИЕ -->
+  <div class="tab-content" id="tab-compare">
+    <h3 class="section-title">Сравнение двух эмитентов</h3>
+    <div class="stub-block">
+      <b>⚖️ Бок о бок: мультипликаторы, рост, дивиденды</b>
+      Скелет вкладки. Поднимем после готовности профиля и подключения Supabase.
+      <div class="stub-todo">TODO: 2× профильных запроса, side-by-side таблица + светофор лучшего значения по каждой метрике.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Академия «Инвестиции просто» · Фундаменталка v0.1 (каркас) · MOEX ISS
+  </div>
+</div>
+
+<!-- HINT POPUP (подключён, для будущих подсказок) -->
+<div class="hint-popup" id="hintPopup">
+  <div class="hint-content">
+    <div id="hintText"></div>
+    <button class="hint-close" onclick="closeHint()">Понятно</button>
+  </div>
+</div>
+
+<script>
+// ==================== TELEGRAM WEBAPP ====================
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+// ==================== TABS ====================
+document.querySelectorAll('.tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+function switchTab(name) {
+  var btn = document.querySelector('.tab[data-tab="' + name + '"]');
+  if (btn) btn.click();
+}
+
+// ==================== HELPERS ====================
+function escHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function formatMoney(num) {
+  if (num === null || num === undefined || isNaN(num)) return '—';
+  var n = Number(num);
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + ' трлн ₽';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + ' млрд ₽';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + ' млн ₽';
+  return n.toLocaleString('ru-RU') + ' ₽';
+}
+
+function formatPrice(num) {
+  if (num === null || num === undefined || isNaN(num)) return '—';
+  return Number(num).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
+}
+
+function showHint(text) {
+  document.getElementById('hintText').innerHTML = text;
+  document.getElementById('hintPopup').classList.add('show');
+}
+function closeHint() {
+  document.getElementById('hintPopup').classList.remove('show');
+}
+document.getElementById('hintPopup').addEventListener('click', function(e) {
+  if (e.target === this) closeHint();
+});
+
+// ==================== MOEX ISS API ====================
+const MOEX_BASE = 'https://iss.moex.com/iss';
+
+async function moexFetch(url) {
+  var resp = await fetch(url);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return resp.json();
+}
+
+async function searchMoex(query) {
+  var status = document.getElementById('moexStatus');
+  var results = document.getElementById('moexResults');
+  var btn = document.getElementById('moexSearchBtn');
+
+  if (!query || query.trim().length < 2) {
+    status.textContent = 'Введите минимум 2 символа';
+    status.className = 'moex-status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Ищу...';
+  status.textContent = '';
+  status.className = 'moex-status';
+  results.innerHTML = '';
+
+  try {
+    var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(query.trim()) + '&limit=100&iss.meta=off&group_by_filter=stock_shares';
+    var data = await moexFetch(url);
+
+    var cols = data.securities.columns;
+    var rows = data.securities.data;
+
+    if (!rows || rows.length === 0) {
+      status.textContent = 'Ничего не найдено. Попробуйте другой тикер или название.';
+      status.className = 'moex-status error';
+      btn.disabled = false;
+      btn.textContent = 'Найти';
+      return;
+    }
+
+    var allItems = rows.map(function(r) {
+      var d = {};
+      cols.forEach(function(c, i) { d[c] = r[i]; });
+      return d;
+    });
+
+    // Оставляем только обыкновенные и привилегированные акции; индексы и фьючерсы убираем
+    var shares = allItems.filter(function(d) {
+      return d.group === 'stock_shares' && (d.type === 'common_share' || d.type === 'preferred_share');
+    });
+    var toShow = shares.length > 0 ? shares : allItems;
+    renderMoexResults(toShow);
+    status.textContent = 'Найдено акций: ' + toShow.length;
+    status.className = 'moex-status success';
+  } catch (err) {
+    status.textContent = 'Не удалось подключиться. Проверь интернет.';
+    status.className = 'moex-status error';
+    console.error('MOEX search error:', err);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Найти';
+}
+
+function renderMoexResults(shares) {
+  var results = document.getElementById('moexResults');
+  var INITIAL_SHOW = 15;
+  var showAll = shares.length <= INITIAL_SHOW;
+  var toRender = showAll ? shares : shares.slice(0, INITIAL_SHOW);
+
+  function renderItem(s) {
+    var secid = escHtml(s.secid || '');
+    var shortname = escHtml(s.shortname || s.name || 'Без названия');
+    var fullname = escHtml(s.name || '');
+    var typeBadge = s.type === 'preferred_share' ? ' · преф' : '';
+    return '<div class="moex-item" onclick="loadEmitter(\'' + secid + '\')">' +
+      '<span class="moex-item-name">' + shortname + '</span>' +
+      '<span class="moex-item-ticker">' + secid + typeBadge + '</span>' +
+      '<div class="moex-item-details">' + fullname + '</div>' +
+    '</div>';
+  }
+
+  results.innerHTML = toRender.map(renderItem).join('');
+
+  if (!showAll) {
+    var remaining = shares.length - INITIAL_SHOW;
+    results.innerHTML += '<button class="moex-show-all-btn" id="moexShowAllBtn">Показать ещё ' + remaining + '</button>';
+    document.getElementById('moexShowAllBtn').addEventListener('click', function() {
+      var rest = shares.slice(INITIAL_SHOW).map(renderItem).join('');
+      this.remove();
+      results.insertAdjacentHTML('beforeend', rest);
+    });
+  }
+}
+
+// Берём приоритетный борд (для обыкновенных акций — TQBR)
+function pickBestRow(cols, rows, preferBoards) {
+  if (!rows || rows.length === 0) return null;
+  var biIdx = cols.indexOf('BOARDID');
+  if (biIdx >= 0 && preferBoards) {
+    for (var p = 0; p < preferBoards.length; p++) {
+      for (var r = 0; r < rows.length; r++) {
+        if (rows[r][biIdx] === preferBoards[p]) {
+          var o = {}; cols.forEach(function(c, i) { o[c] = rows[r][i]; }); return o;
+        }
+      }
+    }
+  }
+  var first = {}; cols.forEach(function(c, i) { first[c] = rows[0][i]; }); return first;
+}
+
+// ==================== ЗАГРУЗКА ЭМИТЕНТА ====================
+let currentEmitter = null;
+
+async function loadEmitter(secid) {
+  if (!secid) return;
+  // Скрываем «пусто», показываем профиль с спиннером
+  document.getElementById('profile-empty').style.display = 'none';
+  document.getElementById('profile-loaded').style.display = 'block';
+  document.getElementById('prof-name').textContent = 'Загружаю...';
+
+  try {
+    var url = MOEX_BASE + '/engines/stock/markets/shares/securities/' + encodeURIComponent(secid) + '.json?iss.meta=off';
+    var data = await moexFetch(url);
+
+    var sec = pickBestRow(data.securities.columns, data.securities.data, ['TQBR', 'SPEQ']);
+    var md = pickBestRow(data.marketdata.columns, data.marketdata.data, ['TQBR', 'SPEQ']);
+
+    if (!sec) throw new Error('Эмитент не найден');
+
+    currentEmitter = { secid: sec.SECID, name: sec.SECNAME || sec.SHORTNAME, type: sec.SECTYPE };
+
+    document.getElementById('prof-name').textContent = sec.SECNAME || sec.SHORTNAME || '—';
+    document.getElementById('prof-ticker').textContent = sec.SECID || '—';
+    document.getElementById('prof-isin').textContent = sec.ISIN || '—';
+    document.getElementById('prof-type').textContent = (sec.SECTYPE === '1' ? 'Обыкновенная акция'
+      : sec.SECTYPE === '2' ? 'Привилегированная акция'
+      : sec.SECTYPE || '—');
+
+    var price = (md && md.LAST !== null && md.LAST !== undefined) ? md.LAST : sec.PREVPRICE;
+    document.getElementById('prof-price').textContent = formatPrice(price);
+
+    var cap = md && md.ISSUECAPITALIZATION;
+    document.getElementById('prof-cap').textContent = formatMoney(cap);
+
+    document.getElementById('prof-list').textContent = sec.LISTLEVEL ? 'Уровень ' + sec.LISTLEVEL : '—';
+
+    switchTab('profile');
+  } catch (err) {
+    console.error('MOEX load error:', err);
+    document.getElementById('prof-name').textContent = 'Ошибка загрузки';
+  }
+}
+
+// ==================== СОБЫТИЯ ====================
+document.getElementById('moexSearchBtn').addEventListener('click', function() {
+  searchMoex(document.getElementById('moexSearch').value);
+});
+document.getElementById('moexSearch').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchMoex(this.value);
+  }
+});
+
+// ==================== DEEP-LINK ?ticker=SBER ====================
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var t = params.get('ticker') || params.get('issuer');
+  if (t) {
+    loadEmitter(t.toUpperCase());
+  }
+})();
+</script>
+</body>
+</html>
