@@ -289,7 +289,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.2 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.2.1 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -1049,7 +1049,7 @@ async function deepLinkLookup(query) {
 })();
 
 // ==================== СРАВНЕНИЕ ====================
-const cmpState = []; // [{secid, name, isin, listLevel, price, cap}]
+let cmpState = []; // [{secid, name, isin, listLevel, price, cap}]
 
 function cmpRender() {
   var container = document.getElementById('compare-slots');
