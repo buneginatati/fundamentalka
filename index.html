@@ -108,6 +108,39 @@
   .cmp-table .cmp-value.best { color: var(--score-green); }
   .cmp-table .cmp-value.worst { color: var(--muted); }
   .cmp-emoji { margin-right: 4px; }
+
+  /* MULTIPLIERS / FINANCIALS / DIVIDENDS */
+  .metrics-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
+  }
+  .metric-card {
+    padding: 14px 16px; background: var(--bg-card);
+    border: 1.5px solid var(--border); border-radius: 12px;
+  }
+  .metric-card.zone-green  { border-color: rgba(46,139,87,0.5);  background: rgba(46,139,87,0.05); }
+  .metric-card.zone-yellow { border-color: rgba(212,154,0,0.5);  background: rgba(212,154,0,0.05); }
+  .metric-card.zone-red    { border-color: rgba(192,57,43,0.5);  background: rgba(192,57,43,0.05); }
+  .metric-card.zone-na     { background: rgba(0,0,0,0.02); }
+
+  .metric-label {
+    font-size: 11px; color: var(--muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+  }
+  .metric-value { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -0.3px; }
+  .metric-card.zone-green  .metric-value { color: var(--score-green); }
+  .metric-card.zone-yellow .metric-value { color: var(--score-yellow); }
+  .metric-card.zone-red    .metric-value { color: var(--score-red); }
+  .metric-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .metric-na .metric-value { color: var(--muted); font-size: 18px; }
+  .metrics-source {
+    margin-top: 14px; padding: 10px 14px; font-size: 11px; color: var(--muted);
+    background: var(--bg-page); border-radius: 8px; line-height: 1.5;
+  }
+  .group-title {
+    font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1px;
+    text-transform: uppercase; margin: 18px 0 10px;
+  }
+  .group-title:first-child { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -195,30 +228,24 @@
   <!-- ФИНАНСЫ -->
   <div class="tab-content" id="tab-financials">
     <h3 class="section-title">Финансовые показатели</h3>
-    <div class="stub-block">
-      <b>📊 Графики за 4–8 периодов</b>
-      Выручка, операционная прибыль, чистая прибыль, EBITDA, OCF, FCF.
-      <div class="stub-todo">TODO: SELECT * FROM report_financials WHERE emitter_id = ? ORDER BY period_end</div>
+    <div id="financials-content">
+      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
     </div>
   </div>
 
   <!-- МУЛЬТИПЛИКАТОРЫ -->
   <div class="tab-content" id="tab-multipliers">
-    <h3 class="section-title">Мультипликаторы (история)</h3>
-    <div class="stub-block">
-      <b>📈 P/E, P/B, P/S, EV/EBITDA, ROE, ROA, D/E, дивдоходность</b>
-      История за 3–5 лет, графики + таблица текущих значений из таблицы fundamentals.
-      <div class="stub-todo">TODO: SELECT * FROM fundamentals WHERE emitter_id = ?<br>+ история через report_financials.</div>
+    <h3 class="section-title">Мультипликаторы</h3>
+    <div id="multipliers-content">
+      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
     </div>
   </div>
 
   <!-- ДИВИДЕНДЫ -->
   <div class="tab-content" id="tab-dividends">
-    <h3 class="section-title">Дивидендная история</h3>
-    <div class="stub-block">
-      <b>💰 Выплаты, отсечки, ГЭП</b>
-      История выплат, ближайшая отсечка, статистика закрытия дивидендного гэпа.
-      <div class="stub-todo">TODO: SELECT * FROM dividends WHERE emitter_id = ? ORDER BY ex_date DESC</div>
+    <h3 class="section-title">Дивиденды</h3>
+    <div id="dividends-content">
+      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
     </div>
   </div>
 
@@ -556,6 +583,218 @@ const BOND_CALC_URL = 'https://buneginatati.github.io/bond-calculator/';
 
 let currentCompany = null;
 
+// ==================== FUNDAMENTALS DATASET ====================
+// Снимок мультипликаторов из smart-lab.ru (раз в квартал обновляется руками,
+// потом — заменим на чтение из Supabase с пайплайна).
+let FUND = null;
+let FUND_META = { source: '', updated: '' };
+
+async function loadFundamentals() {
+  try {
+    var resp = await fetch('fundamentals.json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var pkg = await resp.json();
+    FUND = pkg.data || {};
+    FUND_META = { source: pkg.source || '', updated: pkg.updated || '' };
+    console.log('fundamentals loaded:', Object.keys(FUND).length);
+    // Если уже выбрана компания — перерисовать табы с данными
+    if (currentCompany && currentCompany.primaryTicker) {
+      renderMultipliers(currentCompany.primaryTicker, currentCompany.emitent_title);
+      renderFinancials(currentCompany.primaryTicker, currentCompany.emitent_title);
+      renderDividends(currentCompany.primaryTicker, currentCompany.emitent_title);
+    }
+  } catch (e) {
+    console.error('fundamentals load failed', e);
+    FUND = {};
+  }
+}
+
+// Светофор: возвращает 'green' | 'yellow' | 'red' | 'na'
+function zoneFor(metric, value) {
+  if (value === null || value === undefined || isNaN(value)) return 'na';
+  var v = Number(value);
+  switch (metric) {
+    case 'p_e':
+      if (v <= 0) return 'red';
+      if (v <= 5) return 'green';
+      if (v <= 10) return 'yellow';
+      return 'red';
+    case 'p_b':
+      if (v <= 0) return 'red';
+      if (v <= 1) return 'green';
+      if (v <= 2) return 'yellow';
+      return 'red';
+    case 'p_s':
+      if (v <= 1) return 'green';
+      if (v <= 2) return 'yellow';
+      return 'red';
+    case 'ev_ebitda':
+      if (v <= 0) return 'red';
+      if (v <= 4) return 'green';
+      if (v <= 7) return 'yellow';
+      return 'red';
+    case 'roe':
+      if (v >= 15) return 'green';
+      if (v >= 8) return 'yellow';
+      return 'red';
+    case 'roa':
+      if (v >= 7) return 'green';
+      if (v >= 3) return 'yellow';
+      return 'red';
+    case 'debt_ebitda':
+      if (v <= 0) return 'green';   // нет чистого долга — хорошо
+      if (v <= 1) return 'green';
+      if (v <= 3) return 'yellow';
+      return 'red';
+    case 'div_yield':
+      if (v >= 8) return 'green';
+      if (v >= 5) return 'yellow';
+      return 'red';
+    case 'ebitda_margin':
+      if (v >= 30) return 'green';
+      if (v >= 15) return 'yellow';
+      return 'red';
+    default:
+      return 'na';
+  }
+}
+
+function fmtNum(v, suffix) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + (suffix || '');
+}
+
+function fmtBnRub(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  if (Math.abs(v) >= 1000) return (v / 1000).toFixed(2) + ' трлн ₽';
+  return Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' млрд ₽';
+}
+
+function metricCard(label, value, metric, opts) {
+  opts = opts || {};
+  var zone = opts.noZone ? 'na' : zoneFor(metric, value);
+  var displayed;
+  if (value === null || value === undefined) {
+    displayed = '—';
+  } else if (opts.format === 'percent') {
+    displayed = fmtNum(value, '%');
+  } else if (opts.format === 'bnrub') {
+    displayed = fmtBnRub(value);
+  } else {
+    displayed = fmtNum(value);
+  }
+  return '<div class="metric-card zone-' + zone + (zone === 'na' ? ' metric-na' : '') + '">'
+    + '<div class="metric-label">' + escHtml(label) + '</div>'
+    + '<div class="metric-value">' + escHtml(displayed) + '</div>'
+    + (opts.hint ? '<div class="metric-hint">' + escHtml(opts.hint) + '</div>' : '')
+    + '</div>';
+}
+
+function emptyMetricsState(reason) {
+  return '<div class="empty-state">' + escHtml(reason || 'Сначала выбери компанию во вкладке «Поиск».') + '</div>';
+}
+
+function renderMultipliers(ticker, companyName) {
+  var el = document.getElementById('multipliers-content');
+  if (!ticker) { el.innerHTML = emptyMetricsState(); return; }
+  if (!FUND) { el.innerHTML = emptyMetricsState('Загружаю данные...'); return; }
+  var f = FUND[ticker];
+  if (!f) {
+    el.innerHTML = '<div class="stub-block"><b>📊 По «' + escHtml(companyName || ticker) + '» цифр пока нет</b>'
+      + 'Источник (smart-lab) этого эмитента сейчас не покрывает. Когда твой Supabase подцепится — данные появятся.</div>';
+    return;
+  }
+
+  var html = '';
+  html += '<div class="group-title">Оценка</div>';
+  html += '<div class="metrics-grid">';
+  html += metricCard('P/E', f.p_e, 'p_e', { hint: 'цена / прибыль' });
+  html += metricCard('P/B', f.p_b, 'p_b', { hint: 'цена / капитал' });
+  if (f.p_s !== undefined) html += metricCard('P/S', f.p_s, 'p_s', { hint: 'цена / выручка' });
+  if (f.ev_ebitda !== undefined) html += metricCard('EV/EBITDA', f.ev_ebitda, 'ev_ebitda', { hint: 'долг + капа / EBITDA' });
+  html += '</div>';
+
+  html += '<div class="group-title">Эффективность</div>';
+  html += '<div class="metrics-grid">';
+  if (f.roe !== undefined) html += metricCard('ROE', f.roe, 'roe', { format: 'percent', hint: 'рентабельность капитала' });
+  if (f.roa !== undefined) html += metricCard('ROA', f.roa, 'roa', { format: 'percent', hint: 'рентабельность активов' });
+  if (f.ebitda_margin !== undefined) html += metricCard('Маржа EBITDA', f.ebitda_margin, 'ebitda_margin', { format: 'percent', hint: 'EBITDA / выручка' });
+  if (f.net_interest_margin !== undefined) html += metricCard('ЧПМ', f.net_interest_margin, null, { format: 'percent', noZone: true, hint: 'чистая процентная маржа банка' });
+  html += '</div>';
+
+  if (f.debt_ebitda !== undefined && f.debt_ebitda !== null) {
+    html += '<div class="group-title">Долг</div>';
+    html += '<div class="metrics-grid">';
+    html += metricCard('Долг / EBITDA', f.debt_ebitda, 'debt_ebitda', { hint: 'чистый долг к EBITDA' });
+    html += '</div>';
+  }
+
+  html += '<div class="metrics-source">'
+    + 'Источник: ' + escHtml(FUND_META.source || '—')
+    + ' · Снимок от ' + escHtml(FUND_META.updated || '—')
+    + '. Когда подключим Supabase — цифры будут обновляться автоматически.'
+    + '</div>';
+
+  el.innerHTML = html;
+}
+
+function renderFinancials(ticker, companyName) {
+  var el = document.getElementById('financials-content');
+  if (!ticker) { el.innerHTML = emptyMetricsState(); return; }
+  if (!FUND) { el.innerHTML = emptyMetricsState('Загружаю данные...'); return; }
+  var f = FUND[ticker];
+  if (!f) {
+    el.innerHTML = '<div class="stub-block"><b>📊 По «' + escHtml(companyName || ticker) + '» цифр пока нет</b>Источник этого эмитента не покрывает.</div>';
+    return;
+  }
+
+  var html = '<div class="metrics-grid">';
+  html += metricCard('Капитализация', f.cap_bn_rub, null, { format: 'bnrub', noZone: true });
+  if (f.ev_bn_rub !== undefined && f.ev_bn_rub !== null) {
+    html += metricCard('EV (рыночная стоимость)', f.ev_bn_rub, null, { format: 'bnrub', noZone: true, hint: 'капа + чистый долг' });
+  }
+  if (f.revenue !== undefined && f.revenue !== null) {
+    html += metricCard('Выручка', f.revenue, null, { format: 'bnrub', noZone: true });
+  }
+  if (f.net_op_income !== undefined && f.net_op_income !== null) {
+    html += metricCard('Чистый операционный доход', f.net_op_income, null, { format: 'bnrub', noZone: true });
+  }
+  html += metricCard('Чистая прибыль', f.net_profit, null, { format: 'bnrub', noZone: true });
+  html += '</div>';
+  html += '<div class="metrics-source">Источник: ' + escHtml(FUND_META.source) + ' · ' + escHtml(FUND_META.updated) + '</div>';
+  el.innerHTML = html;
+}
+
+function renderDividends(ticker, companyName) {
+  var el = document.getElementById('dividends-content');
+  if (!ticker) { el.innerHTML = emptyMetricsState(); return; }
+  if (!FUND) { el.innerHTML = emptyMetricsState('Загружаю данные...'); return; }
+  var f = FUND[ticker];
+  if (!f) {
+    el.innerHTML = '<div class="stub-block"><b>💰 По «' + escHtml(companyName || ticker) + '» дивидендных цифр пока нет</b></div>';
+    return;
+  }
+
+  var html = '<div class="metrics-grid">';
+  html += metricCard('Дивдоходность ао', f.div_yield_common, 'div_yield', { format: 'percent' });
+  if (f.div_yield_pref !== null && f.div_yield_pref !== undefined) {
+    html += metricCard('Дивдоходность ап', f.div_yield_pref, 'div_yield', { format: 'percent' });
+  }
+  if (f.div_payout_ratio !== null && f.div_payout_ratio !== undefined) {
+    html += metricCard('Payout', f.div_payout_ratio, null, { format: 'percent', noZone: true, hint: 'дивиденды / прибыль' });
+  }
+  html += '</div>';
+  html += '<div class="stub-block">'
+    + '<b>📅 История выплат и календарь отсечек</b>'
+    + 'Подтянутся из Supabase, когда он будет готов: список последних дивидендов, ближайшая отсечка, статистика дивгэпа.'
+    + '</div>';
+  html += '<div class="metrics-source">Источник: ' + escHtml(FUND_META.source) + ' · ' + escHtml(FUND_META.updated) + '</div>';
+  el.innerHTML = html;
+}
+
+// Запускаем загрузку при старте — fetch не блокирует UI
+loadFundamentals();
+
 // Подгрузить marketdata для одной акции (нужно для цены и капитализации)
 async function fetchShareMarketdata(secid) {
   try {
@@ -600,6 +839,7 @@ async function loadCompany(emitent_id) {
   }
 
   currentCompany = emitter;
+  currentCompany.primaryTicker = null;
 
   document.getElementById('prof-name').textContent = emitter.emitent_title || '—';
   document.getElementById('prof-inn').textContent = emitter.emitent_inn || '—';
@@ -618,14 +858,23 @@ async function loadCompany(emitent_id) {
     document.getElementById('prof-bonds-list').innerHTML = renderBondsList(bondItems);
   }
 
+  var primaryTicker = null;
   if (shareItems.length > 0) {
     var sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
     var totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
     document.getElementById('prof-cap').textContent = totalCap > 0 ? formatMoney(totalCap) : '—';
     document.getElementById('prof-shares-list').innerHTML = renderSharesList(sharesData);
+    var primary = sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0];
+    if (primary) primaryTicker = primary.secid;
+    if (currentCompany) currentCompany.primaryTicker = primaryTicker;
   } else {
     document.getElementById('prof-cap').textContent = '— (только облигации)';
   }
+
+  // Заполняем остальные табы данными по основному тикеру компании
+  renderMultipliers(primaryTicker, emitter.emitent_title);
+  renderFinancials(primaryTicker, emitter.emitent_title);
+  renderDividends(primaryTicker, emitter.emitent_title);
 }
 
 function renderSharesList(shares) {
