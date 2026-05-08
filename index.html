@@ -388,6 +388,35 @@ function filterBonds(arr) {
   });
 }
 
+// Русское склонение: pluralizeRu(N, ['яблоко','яблока','яблок'])
+function pluralizeRu(n, forms) {
+  var mod10 = n % 10, mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return forms[2];
+  if (mod10 === 1) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4) return forms[1];
+  return forms[2];
+}
+
+// Проверка: запрос q относится к эмитенту e (по названию/ИНН/тикеру/ISIN),
+// а не лишь к названию какого-то структурного продукта.
+function matchesEmitter(e, q) {
+  var qNorm = q.toLowerCase().trim();
+  if (!qNorm) return false;
+
+  // Совпадение в названии или ИНН компании
+  var hay = (e.emitent_title || '').toLowerCase();
+  if (hay.indexOf(qNorm) !== -1) return true;
+  if (e.emitent_inn && String(e.emitent_inn).indexOf(qNorm) !== -1) return true;
+
+  // Точное совпадение запроса с тикером/ISIN одного из её собственных инструментов
+  var qUpper = q.toUpperCase().trim();
+  return e.instruments.some(function(it) {
+    if ((it.secid || '').toUpperCase() === qUpper) return true;
+    if ((it.isin || '').toUpperCase() === qUpper) return true;
+    return false;
+  });
+}
+
 // Кэш найденных компаний — потом достаём при клике
 var foundEmitters = {}; // emitent_id -> emitter
 
@@ -434,6 +463,14 @@ async function searchMoex(query) {
 
     var emitters = groupByEmitter(items);
 
+    // Отсекаем «случайные» совпадения: компания попала только потому, что её
+    // структурный продукт (СберИОС, ВТБ-Лукойл) содержит слово запроса в названии.
+    // Оставляем эмитента, если его название/ИНН содержит запрос или один из его
+    // тикеров/ISIN точно равен запросу.
+    emitters = emitters.filter(function(e) {
+      return matchesEmitter(e, q);
+    });
+
     if (emitters.length === 0) {
       status.textContent = 'По «' + q + '» компаний-эмитентов не нашлось. Попробуй другое название.';
       status.className = 'moex-status error';
@@ -451,7 +488,8 @@ async function searchMoex(query) {
 
     renderEmitterResults(emitters);
     var hint = isISIN(q) ? ' (по ISIN)' : '';
-    status.textContent = 'Найдено компаний: ' + emitters.length + hint;
+    status.textContent = pluralizeRu(emitters.length, ['Найдена', 'Найдено', 'Найдено']) + ' '
+      + pluralizeRu(emitters.length, ['компания', 'компании', 'компаний']) + ': ' + emitters.length + hint;
     status.className = 'moex-status success';
   } catch (err) {
     status.textContent = 'Не удалось подключиться к бирже. Проверь интернет.';
@@ -473,9 +511,9 @@ function renderEmitterResults(emitters) {
     var shares = filterShares(e.instruments);
     var bonds = filterBonds(e.instruments);
     var bits = [];
-    if (shares.length) bits.push(shares.length + ' акций/преф');
-    if (bonds.length) bits.push(bonds.length + ' облигаций');
-    var sub = bits.length ? bits.join(' · ') : (e.instruments.length + ' инструментов');
+    if (shares.length) bits.push(shares.length + ' ' + pluralizeRu(shares.length, ['акция', 'акции', 'акций']));
+    if (bonds.length) bits.push(bonds.length + ' ' + pluralizeRu(bonds.length, ['облигация', 'облигации', 'облигаций']));
+    var sub = bits.length ? bits.join(' · ') : (e.instruments.length + ' ' + pluralizeRu(e.instruments.length, ['инструмент', 'инструмента', 'инструментов']));
     var inn = e.emitent_inn ? ' · ИНН ' + escHtml(e.emitent_inn) : '';
     return '<div class="moex-item" onclick="loadCompany(' + e.emitent_id + ')">' +
       '<span class="moex-item-name">' + escHtml(e.emitent_title) + '</span>' +
@@ -735,7 +773,9 @@ async function cmpSearch(idx) {
       return false;
     });
 
-    var emitters = groupByEmitter(items);
+    var emitters = groupByEmitter(items).filter(function(e) {
+      return matchesEmitter(e, q);
+    });
     emitters.sort(function(a, b) { return b.instruments.length - a.instruments.length; });
 
     if (emitters.length === 0) {
@@ -747,14 +787,14 @@ async function cmpSearch(idx) {
     cmpFound[idx] = {};
     emitters.forEach(function(e) { cmpFound[idx][e.emitent_id] = e; });
 
-    status.textContent = 'Найдено компаний: ' + emitters.length + ' — выбери одну';
+    status.textContent = 'Найдено: ' + emitters.length + ' — выбери одну';
     status.className = 'cmp-slot-status';
     results.innerHTML = emitters.slice(0, 10).map(function(e) {
       var shares = filterShares(e.instruments).length;
       var bonds = filterBonds(e.instruments).length;
       var bits = [];
-      if (shares) bits.push(shares + ' акций');
-      if (bonds) bits.push(bonds + ' облигаций');
+      if (shares) bits.push(shares + ' ' + pluralizeRu(shares, ['акция', 'акции', 'акций']));
+      if (bonds) bits.push(bonds + ' ' + pluralizeRu(bonds, ['облигация', 'облигации', 'облигаций']));
       return '<div class="moex-item" onclick="cmpPick(' + idx + ', ' + e.emitent_id + ')">'
         + '<span class="moex-item-name">' + escHtml(e.emitent_title) + '</span>'
         + '<div class="moex-item-details">' + bits.join(' · ') + '</div>'
