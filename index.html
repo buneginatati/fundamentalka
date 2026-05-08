@@ -583,29 +583,40 @@ const BOND_CALC_URL = 'https://buneginatati.github.io/bond-calculator/';
 
 let currentCompany = null;
 
-// ==================== FUNDAMENTALS DATASET ====================
-// Снимок мультипликаторов из smart-lab.ru (раз в квартал обновляется руками,
-// потом — заменим на чтение из Supabase с пайплайна).
+// ==================== ДАТАСЕТЫ ====================
+// Мультипликаторы из smart-lab.ru, дивиденды из dohod.ru.
+// Раз в квартал обновляются руками; когда подключим Supabase — переключим на него.
 let FUND = null;
 let FUND_META = { source: '', updated: '' };
+let DIVS_DATA = null;
+let DIVS_META = { source: '', updated: '' };
 
 async function loadFundamentals() {
   try {
-    var resp = await fetch('fundamentals.json');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    var pkg = await resp.json();
-    FUND = pkg.data || {};
-    FUND_META = { source: pkg.source || '', updated: pkg.updated || '' };
-    console.log('fundamentals loaded:', Object.keys(FUND).length);
-    // Если уже выбрана компания — перерисовать табы с данными
+    var [r1, r2] = await Promise.all([
+      fetch('fundamentals.json'),
+      fetch('dividends.json')
+    ]);
+    if (r1.ok) {
+      var pkg1 = await r1.json();
+      FUND = pkg1.data || {};
+      FUND_META = { source: pkg1.source || '', updated: pkg1.updated || '' };
+    } else { FUND = {}; }
+    if (r2.ok) {
+      var pkg2 = await r2.json();
+      DIVS_DATA = pkg2.data || {};
+      DIVS_META = { source: pkg2.source || '', updated: pkg2.updated || '' };
+    } else { DIVS_DATA = {}; }
+    console.log('datasets:', Object.keys(FUND).length, 'fund,', Object.keys(DIVS_DATA).length, 'divs');
     if (currentCompany && currentCompany.primaryTicker) {
       renderMultipliers(currentCompany.primaryTicker, currentCompany.emitent_title);
       renderFinancials(currentCompany.primaryTicker, currentCompany.emitent_title);
       renderDividends(currentCompany.primaryTicker, currentCompany.emitent_title);
     }
   } catch (e) {
-    console.error('fundamentals load failed', e);
-    FUND = {};
+    console.error('datasets load failed', e);
+    FUND = FUND || {};
+    DIVS_DATA = DIVS_DATA || {};
   }
 }
 
@@ -768,27 +779,63 @@ function renderFinancials(ticker, companyName) {
 function renderDividends(ticker, companyName) {
   var el = document.getElementById('dividends-content');
   if (!ticker) { el.innerHTML = emptyMetricsState(); return; }
-  if (!FUND) { el.innerHTML = emptyMetricsState('Загружаю данные...'); return; }
-  var f = FUND[ticker];
-  if (!f) {
-    el.innerHTML = '<div class="stub-block"><b>💰 По «' + escHtml(companyName || ticker) + '» дивидендных цифр пока нет</b></div>';
+  if (!DIVS_DATA) { el.innerHTML = emptyMetricsState('Загружаю данные...'); return; }
+
+  // Собираем все варианты (обыкн + преф) у этой компании из state
+  var tickers = [ticker];
+  if (currentCompany) {
+    // Если профиль уже есть — добавим SBERP-стиль преф через инструменты
+    var allShares = filterShares(currentCompany.instruments).map(function(s) { return s.secid; });
+    allShares.forEach(function(t) { if (tickers.indexOf(t) < 0) tickers.push(t); });
+  }
+
+  var anyData = false;
+  var html = '';
+  tickers.forEach(function(t) {
+    var d = DIVS_DATA[t];
+    if (!d) return;
+    anyData = true;
+    html += '<div class="group-title">' + escHtml(t) + '</div>';
+    html += '<div class="metrics-grid">';
+
+    if (d.ttm_amount !== undefined && d.ttm_amount !== null) {
+      html += metricCard('Дивдоходность TTM', d.ttm_yield, 'div_yield', { format: 'percent', hint: 'за последние 12 мес.' });
+      html += metricCard('Сумма за TTM', d.ttm_amount, null, { noZone: true, hint: '₽ на акцию' });
+    }
+    if (d.forecast) {
+      html += metricCard('Прогноз ' + escHtml(d.forecast.period || ''), d.forecast.yield, 'div_yield', { format: 'percent', hint: 'ожидаемая дивдоходность' });
+      var hint2 = (d.forecast.amount ? d.forecast.amount + ' ₽' : '') + (d.forecast.ex_date ? ' · отсечка ' + d.forecast.ex_date : '');
+      html += metricCard('Прогнозная выплата', d.forecast.amount, null, { noZone: true, hint: hint2 });
+    }
+    if (d.dsi !== undefined && d.dsi !== null) {
+      // DSI: 0-1, чем выше тем стабильнее. >0.6 хорошо, 0.3-0.6 средне, <0.3 плохо
+      var dsiZone = d.dsi >= 0.6 ? 'green' : (d.dsi >= 0.3 ? 'yellow' : 'red');
+      html += '<div class="metric-card zone-' + dsiZone + '">'
+        + '<div class="metric-label">DSI · стабильность дивидендов</div>'
+        + '<div class="metric-value">' + fmtNum(d.dsi) + '</div>'
+        + '<div class="metric-hint">0–1, чем выше тем стабильнее платит</div>'
+        + '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  if (!anyData) {
+    el.innerHTML = '<div class="stub-block"><b>💰 По «' + escHtml(companyName || ticker) + '» дивидендных цифр в источнике нет</b>'
+      + 'Возможно, компания их не платит или просто не в покрытии источника. Проверь напрямую на dohod.ru.</div>';
     return;
   }
 
-  var html = '<div class="metrics-grid">';
-  html += metricCard('Дивдоходность ао', f.div_yield_common, 'div_yield', { format: 'percent' });
-  if (f.div_yield_pref !== null && f.div_yield_pref !== undefined) {
-    html += metricCard('Дивдоходность ап', f.div_yield_pref, 'div_yield', { format: 'percent' });
+  // Запасной payout из FUND (если есть)
+  var f = FUND && FUND[ticker];
+  if (f && f.div_payout_ratio !== null && f.div_payout_ratio !== undefined) {
+    html += '<div class="group-title">Из отчётности</div>';
+    html += '<div class="metrics-grid">';
+    html += metricCard('Payout', f.div_payout_ratio, null, { format: 'percent', noZone: true, hint: 'дивиденды / чистая прибыль' });
+    html += '</div>';
   }
-  if (f.div_payout_ratio !== null && f.div_payout_ratio !== undefined) {
-    html += metricCard('Payout', f.div_payout_ratio, null, { format: 'percent', noZone: true, hint: 'дивиденды / прибыль' });
-  }
-  html += '</div>';
-  html += '<div class="stub-block">'
-    + '<b>📅 История выплат и календарь отсечек</b>'
-    + 'Подтянутся из Supabase, когда он будет готов: список последних дивидендов, ближайшая отсечка, статистика дивгэпа.'
-    + '</div>';
-  html += '<div class="metrics-source">Источник: ' + escHtml(FUND_META.source) + ' · ' + escHtml(FUND_META.updated) + '</div>';
+
+  html += '<div class="metrics-source">Источник: ' + escHtml(DIVS_META.source) + ' · снимок от ' + escHtml(DIVS_META.updated) + '</div>';
   el.innerHTML = html;
 }
 
@@ -859,16 +906,26 @@ async function loadCompany(emitent_id) {
   }
 
   var primaryTicker = null;
+  var sharesData = [];
+  var totalCap = 0;
   if (shareItems.length > 0) {
-    var sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
-    var totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
+    sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
+    totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
     document.getElementById('prof-cap').textContent = totalCap > 0 ? formatMoney(totalCap) : '—';
     document.getElementById('prof-shares-list').innerHTML = renderSharesList(sharesData);
     var primary = sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0];
     if (primary) primaryTicker = primary.secid;
-    if (currentCompany) currentCompany.primaryTicker = primaryTicker;
   } else {
     document.getElementById('prof-cap').textContent = '— (только облигации)';
+  }
+  // Сохраняем в currentCompany для дальнейшего переиспользования (compare и т.п.)
+  if (currentCompany) {
+    currentCompany.primaryTicker = primaryTicker;
+    currentCompany.sharesData = sharesData;
+    currentCompany.totalCap = totalCap;
+    currentCompany.bondsCount = bondItems.length;
+    currentCompany.sharesCount = shareItems.length;
+    currentCompany.primaryListLevel = (sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0] || {}).listLevel;
   }
 
   // Заполняем остальные табы данными по основному тикеру компании
@@ -1165,13 +1222,42 @@ function cmpRenderTable() {
 
 document.getElementById('compareAddBtn').addEventListener('click', cmpAdd);
 
-// При первом открытии вкладки «Сравнение» создаём 2 пустых слота
+// Прикрепляем текущую открытую компанию первым слотом
+function cmpPrependCurrent() {
+  if (!currentCompany || !currentCompany.emitent_id) return false;
+  // Уже есть в списке?
+  var already = cmpState.some(function(s) { return s && s.emitent_id === currentCompany.emitent_id; });
+  if (already) return false;
+  // Регистрируем компанию в cache, чтобы можно было удалять/перевыбирать
+  cmpFound[0] = cmpFound[0] || {};
+  cmpFound[0][currentCompany.emitent_id] = currentCompany;
+  // Добавляем как первый слот
+  var slot = {
+    emitent_id: currentCompany.emitent_id,
+    name: currentCompany.emitent_title,
+    inn: currentCompany.emitent_inn,
+    sharesCount: currentCompany.sharesCount || 0,
+    bondsCount: currentCompany.bondsCount || 0,
+    totalCap: currentCompany.totalCap || 0,
+    primaryTicker: currentCompany.primaryTicker,
+    primaryListLevel: currentCompany.primaryListLevel
+  };
+  cmpState.unshift(slot);
+  return true;
+}
+
+// При открытии вкладки «Сравнение» — гарантируем разумное стартовое состояние
 document.querySelector('.tab[data-tab="compare"]').addEventListener('click', function() {
-  if (cmpState.length === 0) {
-    cmpState.push({}, {});
-    cmpRender();
+  // Удаляем пустые висящие слоты, оставляя только с данными
+  cmpState = cmpState.filter(function(s) { return s && s.emitent_id; });
+  // Добавляем текущую открытую (если она ещё не в списке)
+  cmpPrependCurrent();
+  // Гарантируем минимум один пустой слот для добавления
+  if (cmpState.every(function(s) { return s && s.emitent_id; })) {
+    cmpState.push({});
   }
-}, { once: true });
+  cmpRender();
+});
 </script>
 </body>
 </html>
