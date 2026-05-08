@@ -1299,21 +1299,25 @@ function syncCompareWithCurrent() {
   cmpRender();
 }
 
-// При открытии вкладки «Сравнение» — гарантируем разумное стартовое состояние
+// Изначально показываем один пустой слот (для случая когда компания ещё не выбрана).
+cmpState.push({});
+
+// При открытии вкладки «Сравнение» — гарантируем актуальное стартовое состояние.
 document.querySelector('.tab[data-tab="compare"]').addEventListener('click', function() {
-  // Удаляем пустые висящие слоты, оставляя только с данными
-  cmpState = cmpState.filter(function(s) { return s && s.emitent_id; });
-  // Если текущей компании в списке нет — добавим
+  // Если текущая компания выбрана и её ещё нет в списке — поднимаем её первой
   if (currentCompany && currentCompany.emitent_id) {
-    var already = cmpState.some(function(s) { return s.emitent_id === currentCompany.emitent_id; });
+    var already = cmpState.some(function(s) { return s && s.emitent_id === currentCompany.emitent_id; });
     if (!already) syncCompareWithCurrent();
   }
-  // Гарантируем минимум один пустой слот для добавления
+  // Минимум один пустой слот для добавления
   if (cmpState.length === 0 || cmpState.every(function(s) { return s && s.emitent_id; })) {
     cmpState.push({});
   }
   cmpRender();
 });
+
+// Первичный рендер (при загрузке страницы)
+cmpRender();
 </script>
 </body>
 </html>
