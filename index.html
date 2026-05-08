@@ -140,9 +140,9 @@
 
   <!-- ПОИСК -->
   <div class="tab-content active" id="tab-search">
-    <h3 class="section-title">Найти эмитента</h3>
+    <h3 class="section-title">Найти компанию-эмитента</h3>
     <div class="moex-search-wrap">
-      <input class="input-field moex-input" id="moexSearch" placeholder="Тикер, русское название или ISIN">
+      <input class="input-field moex-input" id="moexSearch" placeholder="Название компании, тикер или ISIN">
       <button class="moex-search-btn" id="moexSearchBtn">Найти</button>
     </div>
     <div class="moex-status" id="moexStatus"></div>
@@ -152,45 +152,42 @@
   <!-- ПРОФИЛЬ -->
   <div class="tab-content" id="tab-profile">
     <div id="profile-empty" class="empty-state">
-      Сначала выбери эмитента во вкладке «Поиск».
+      Сначала выбери компанию во вкладке «Поиск».
     </div>
     <div id="profile-loaded" style="display:none;">
-      <h3 class="section-title">Профиль эмитента</h3>
+      <h3 class="section-title">Профиль компании</h3>
       <div class="profile-grid">
         <div class="profile-row">
           <span class="profile-label">Название</span>
           <span class="profile-value" id="prof-name">—</span>
         </div>
         <div class="profile-row">
-          <span class="profile-label">Тикер</span>
-          <span class="profile-value"><span class="ticker-pill" id="prof-ticker">—</span></span>
+          <span class="profile-label">ИНН</span>
+          <span class="profile-value" id="prof-inn">—</span>
         </div>
         <div class="profile-row">
-          <span class="profile-label">ISIN</span>
-          <span class="profile-value" id="prof-isin">—</span>
+          <span class="profile-label">ОКПО</span>
+          <span class="profile-value" id="prof-okpo">—</span>
         </div>
         <div class="profile-row">
-          <span class="profile-label">Тип бумаги</span>
-          <span class="profile-value" id="prof-type">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">Цена (последняя)</span>
-          <span class="profile-value" id="prof-price">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">Капитализация</span>
+          <span class="profile-label">Капитализация (акции)</span>
           <span class="profile-value" id="prof-cap">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">Уровень листинга</span>
-          <span class="profile-value" id="prof-list">—</span>
         </div>
       </div>
 
-      <div class="stub-block">
-        <b>📋 Краткая справка о компании</b>
-        Подтянется из Supabase: что за бизнес, как зарабатывает, ключевые направления.
-        <div class="stub-todo">TODO: SELECT description FROM emitters WHERE ticker = ?</div>
+      <div id="prof-shares-block" style="display:none; margin-top: 18px;">
+        <h3 class="section-title">Акции компании</h3>
+        <div id="prof-shares-list"></div>
+      </div>
+
+      <div id="prof-bonds-block" style="display:none; margin-top: 18px;">
+        <h3 class="section-title">Облигационные выпуски</h3>
+        <div id="prof-bonds-list"></div>
+      </div>
+
+      <div class="stub-block" style="margin-top: 18px;">
+        <b>📋 Краткая справка и финансы</b>
+        Что за бизнес, как зарабатывает, мультипликаторы (P/E, P/B, ROE), дивиденды, инсайдеры — подтянутся из Supabase, когда он будет готов.
       </div>
     </div>
   </div>
@@ -340,10 +337,59 @@ async function moexFetch(url) {
   return resp.json();
 }
 
-// Распознаём ISIN: RU + 10 цифр/букв
+// Распознаём ISIN: 2 буквы + 9 буквенно-цифровых + цифра контроля
 function isISIN(s) {
   return /^[A-Z]{2}[A-Z0-9]{9}\d$/i.test(s.trim());
 }
+
+// Тип инструмента в человеческом виде
+function instrumentLabel(item) {
+  if (item.type === 'common_share') return 'Обыкн. акция';
+  if (item.type === 'preferred_share') return 'Преф. акция';
+  if (item.type === 'depositary_receipt') return 'Депозит. расписка';
+  if (item.group === 'stock_bonds') return 'Облигация';
+  if (item.group === 'stock_eurobond') return 'Еврооблигация';
+  return item.type || item.group || '—';
+}
+
+// Группируем массив инструментов по компании-эмитенту
+function groupByEmitter(items) {
+  var byId = {};
+  items.forEach(function(it) {
+    var id = it.emitent_id;
+    if (!id) return; // нет компании — пропускаем (индексы, ПИФы и т.п.)
+    if (!byId[id]) {
+      byId[id] = {
+        emitent_id: id,
+        emitent_title: it.emitent_title || it.name || '—',
+        emitent_inn: it.emitent_inn,
+        emitent_okpo: it.emitent_okpo,
+        instruments: []
+      };
+    }
+    // дедуп инструментов по secid
+    var seen = byId[id].instruments.some(function(x) { return x.secid === it.secid; });
+    if (!seen) byId[id].instruments.push(it);
+  });
+  return Object.keys(byId).map(function(k) { return byId[k]; });
+}
+
+// Только акции (для одной из меток) — обыкн+преф
+function filterShares(arr) {
+  return arr.filter(function(d) {
+    return d.group === 'stock_shares' && (d.type === 'common_share' || d.type === 'preferred_share');
+  });
+}
+
+// Только облигации
+function filterBonds(arr) {
+  return arr.filter(function(d) {
+    return d.group === 'stock_bonds' || d.group === 'stock_eurobond';
+  });
+}
+
+// Кэш найденных компаний — потом достаём при клике
+var foundEmitters = {}; // emitent_id -> emitter
 
 async function searchMoex(query) {
   var status = document.getElementById('moexStatus');
@@ -352,7 +398,7 @@ async function searchMoex(query) {
 
   var q = (query || '').trim();
   if (q.length < 2) {
-    status.textContent = 'Введите минимум 2 символа: тикер, русское название или ISIN.';
+    status.textContent = 'Введите минимум 2 символа: название компании, тикер или ISIN.';
     status.className = 'moex-status error';
     return;
   }
@@ -364,10 +410,8 @@ async function searchMoex(query) {
   results.innerHTML = '';
 
   try {
-    // Запрашиваем без group_by_filter, чтобы попадать на акции при русском названии тоже
-    var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(q) + '&limit=200&iss.meta=off';
+    var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(q) + '&limit=300&iss.meta=off';
     var data = await moexFetch(url);
-
     var cols = data.securities.columns;
     var rows = data.securities.data;
 
@@ -379,50 +423,38 @@ async function searchMoex(query) {
       return;
     }
 
-    var allItems = rows.map(function(r) {
-      var d = {};
-      cols.forEach(function(c, i) { d[c] = r[i]; });
-      return d;
+    var items = rows.map(function(r) {
+      var d = {}; cols.forEach(function(c, i) { d[c] = r[i]; }); return d;
+    }).filter(function(d) {
+      // оставляем только акции и облигации (всё что относится к компаниям)
+      if (d.group === 'stock_shares' && (d.type === 'common_share' || d.type === 'preferred_share' || d.type === 'depositary_receipt')) return true;
+      if (d.group === 'stock_bonds' || d.group === 'stock_eurobond') return true;
+      return false;
     });
 
-    // Оставляем только обыкновенные и привилегированные акции
-    var shares = allItems.filter(function(d) {
-      return d.group === 'stock_shares'
-        && (d.type === 'common_share' || d.type === 'preferred_share');
-    });
+    var emitters = groupByEmitter(items);
 
-    if (shares.length === 0) {
-      status.textContent = 'По «' + q + '» акций не нашлось. Возможно, это индекс/ETF/облигация. Попробуй другое название.';
+    if (emitters.length === 0) {
+      status.textContent = 'По «' + q + '» компаний-эмитентов не нашлось. Попробуй другое название.';
       status.className = 'moex-status error';
       btn.disabled = false;
       btn.textContent = 'Найти';
       return;
     }
 
-    // Если запрос — ISIN, поднимаем точное совпадение ISIN наверх
-    if (isISIN(q)) {
-      var qUpper = q.toUpperCase();
-      shares.sort(function(a, b) {
-        var aMatch = (a.isin || '').toUpperCase() === qUpper ? 0 : 1;
-        var bMatch = (b.isin || '').toUpperCase() === qUpper ? 0 : 1;
-        return aMatch - bMatch;
-      });
-    }
+    // Сортировка: чем больше инструментов, тем релевантнее
+    emitters.sort(function(a, b) { return b.instruments.length - a.instruments.length; });
 
-    // Уникализируем по тикеру (MOEX возвращает дубли по разным бордам)
-    var seen = {};
-    var unique = shares.filter(function(s) {
-      if (seen[s.secid]) return false;
-      seen[s.secid] = true;
-      return true;
-    });
+    // Кэшируем для дальнейшего открытия
+    foundEmitters = {};
+    emitters.forEach(function(e) { foundEmitters[e.emitent_id] = e; });
 
-    renderMoexResults(unique);
+    renderEmitterResults(emitters);
     var hint = isISIN(q) ? ' (по ISIN)' : '';
-    status.textContent = 'Найдено: ' + unique.length + hint;
+    status.textContent = 'Найдено компаний: ' + emitters.length + hint;
     status.className = 'moex-status success';
   } catch (err) {
-    status.textContent = 'Не удалось подключиться к бирже. Проверь интернет и открой страницу не как локальный файл, а через ссылку.';
+    status.textContent = 'Не удалось подключиться к бирже. Проверь интернет.';
     status.className = 'moex-status error';
     console.error('MOEX search error:', err);
   }
@@ -431,31 +463,33 @@ async function searchMoex(query) {
   btn.textContent = 'Найти';
 }
 
-function renderMoexResults(shares) {
+function renderEmitterResults(emitters) {
   var results = document.getElementById('moexResults');
   var INITIAL_SHOW = 15;
-  var showAll = shares.length <= INITIAL_SHOW;
-  var toRender = showAll ? shares : shares.slice(0, INITIAL_SHOW);
+  var showAll = emitters.length <= INITIAL_SHOW;
+  var toRender = showAll ? emitters : emitters.slice(0, INITIAL_SHOW);
 
-  function renderItem(s) {
-    var secid = escHtml(s.secid || '');
-    var shortname = escHtml(s.shortname || s.name || 'Без названия');
-    var fullname = escHtml(s.name || '');
-    var typeBadge = s.type === 'preferred_share' ? ' · преф' : '';
-    return '<div class="moex-item" onclick="loadEmitter(\'' + secid + '\')">' +
-      '<span class="moex-item-name">' + shortname + '</span>' +
-      '<span class="moex-item-ticker">' + secid + typeBadge + '</span>' +
-      '<div class="moex-item-details">' + fullname + '</div>' +
+  function renderItem(e) {
+    var shares = filterShares(e.instruments);
+    var bonds = filterBonds(e.instruments);
+    var bits = [];
+    if (shares.length) bits.push(shares.length + ' акций/преф');
+    if (bonds.length) bits.push(bonds.length + ' облигаций');
+    var sub = bits.length ? bits.join(' · ') : (e.instruments.length + ' инструментов');
+    var inn = e.emitent_inn ? ' · ИНН ' + escHtml(e.emitent_inn) : '';
+    return '<div class="moex-item" onclick="loadCompany(' + e.emitent_id + ')">' +
+      '<span class="moex-item-name">' + escHtml(e.emitent_title) + '</span>' +
+      '<div class="moex-item-details">' + escHtml(sub) + inn + '</div>' +
     '</div>';
   }
 
   results.innerHTML = toRender.map(renderItem).join('');
 
   if (!showAll) {
-    var remaining = shares.length - INITIAL_SHOW;
+    var remaining = emitters.length - INITIAL_SHOW;
     results.innerHTML += '<button class="moex-show-all-btn" id="moexShowAllBtn">Показать ещё ' + remaining + '</button>';
     document.getElementById('moexShowAllBtn').addEventListener('click', function() {
-      var rest = shares.slice(INITIAL_SHOW).map(renderItem).join('');
+      var rest = emitters.slice(INITIAL_SHOW).map(renderItem).join('');
       this.remove();
       results.insertAdjacentHTML('beforeend', rest);
     });
@@ -478,47 +512,111 @@ function pickBestRow(cols, rows, preferBoards) {
   var first = {}; cols.forEach(function(c, i) { first[c] = rows[0][i]; }); return first;
 }
 
-// ==================== ЗАГРУЗКА ЭМИТЕНТА ====================
-let currentEmitter = null;
+// ==================== ЗАГРУЗКА КОМПАНИИ ====================
+const STOCK_CALC_URL = 'https://buneginatati.github.io/stock-calculator/';
+const BOND_CALC_URL = 'https://buneginatati.github.io/bond-calculator/';
 
-async function loadEmitter(secid) {
-  if (!secid) return;
-  // Скрываем «пусто», показываем профиль с спиннером
-  document.getElementById('profile-empty').style.display = 'none';
-  document.getElementById('profile-loaded').style.display = 'block';
-  document.getElementById('prof-name').textContent = 'Загружаю...';
+let currentCompany = null;
 
+// Подгрузить marketdata для одной акции (нужно для цены и капитализации)
+async function fetchShareMarketdata(secid) {
   try {
     var url = MOEX_BASE + '/engines/stock/markets/shares/securities/' + encodeURIComponent(secid) + '.json?iss.meta=off';
     var data = await moexFetch(url);
-
     var sec = pickBestRow(data.securities.columns, data.securities.data, ['TQBR', 'SPEQ']);
     var md = pickBestRow(data.marketdata.columns, data.marketdata.data, ['TQBR', 'SPEQ']);
-
-    if (!sec) throw new Error('Эмитент не найден');
-
-    currentEmitter = { secid: sec.SECID, name: sec.SECNAME || sec.SHORTNAME, type: sec.SECTYPE };
-
-    document.getElementById('prof-name').textContent = sec.SECNAME || sec.SHORTNAME || '—';
-    document.getElementById('prof-ticker').textContent = sec.SECID || '—';
-    document.getElementById('prof-isin').textContent = sec.ISIN || '—';
-    document.getElementById('prof-type').textContent = (sec.SECTYPE === '1' ? 'Обыкновенная акция'
-      : sec.SECTYPE === '2' ? 'Привилегированная акция'
-      : sec.SECTYPE || '—');
-
-    var price = (md && md.LAST !== null && md.LAST !== undefined) ? md.LAST : sec.PREVPRICE;
-    document.getElementById('prof-price').textContent = formatPrice(price);
-
-    var cap = md && md.ISSUECAPITALIZATION;
-    document.getElementById('prof-cap').textContent = formatMoney(cap);
-
-    document.getElementById('prof-list').textContent = sec.LISTLEVEL ? 'Уровень ' + sec.LISTLEVEL : '—';
-
-    switchTab('profile');
-  } catch (err) {
-    console.error('MOEX load error:', err);
-    document.getElementById('prof-name').textContent = 'Ошибка загрузки';
+    return {
+      secid: secid,
+      name: (sec && (sec.SECNAME || sec.SHORTNAME)) || secid,
+      shortname: sec && sec.SHORTNAME,
+      isin: sec && sec.ISIN,
+      type: sec && sec.SECTYPE,
+      listLevel: sec && sec.LISTLEVEL,
+      price: md && (md.LAST !== null && md.LAST !== undefined ? md.LAST : (sec && sec.PREVPRICE)),
+      cap: md && md.ISSUECAPITALIZATION
+    };
+  } catch (e) {
+    console.error('share marketdata fail', secid, e);
+    return { secid: secid, name: secid, error: true };
   }
+}
+
+async function loadCompany(emitent_id) {
+  if (!emitent_id) return;
+
+  document.getElementById('profile-empty').style.display = 'none';
+  document.getElementById('profile-loaded').style.display = 'block';
+  document.getElementById('prof-name').textContent = 'Загружаю...';
+  document.getElementById('prof-inn').textContent = '—';
+  document.getElementById('prof-okpo').textContent = '—';
+  document.getElementById('prof-cap').textContent = '—';
+  document.getElementById('prof-shares-block').style.display = 'none';
+  document.getElementById('prof-bonds-block').style.display = 'none';
+
+  switchTab('profile');
+
+  var emitter = foundEmitters[emitent_id];
+  if (!emitter) {
+    document.getElementById('prof-name').textContent = 'Не найдено в кэше — повтори поиск.';
+    return;
+  }
+
+  currentCompany = emitter;
+
+  document.getElementById('prof-name').textContent = emitter.emitent_title || '—';
+  document.getElementById('prof-inn').textContent = emitter.emitent_inn || '—';
+  document.getElementById('prof-okpo').textContent = emitter.emitent_okpo || '—';
+
+  // Подгружаем marketdata для всех акций компании параллельно
+  var shareItems = filterShares(emitter.instruments);
+  var bondItems = filterBonds(emitter.instruments);
+
+  if (shareItems.length > 0) {
+    document.getElementById('prof-shares-block').style.display = 'block';
+    document.getElementById('prof-shares-list').innerHTML = '<div style="padding:10px;color:var(--muted);font-size:12px;">Загружаю данные по акциям...</div>';
+  }
+  if (bondItems.length > 0) {
+    document.getElementById('prof-bonds-block').style.display = 'block';
+    document.getElementById('prof-bonds-list').innerHTML = renderBondsList(bondItems);
+  }
+
+  if (shareItems.length > 0) {
+    var sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
+    var totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
+    document.getElementById('prof-cap').textContent = totalCap > 0 ? formatMoney(totalCap) : '—';
+    document.getElementById('prof-shares-list').innerHTML = renderSharesList(sharesData);
+  } else {
+    document.getElementById('prof-cap').textContent = '— (только облигации)';
+  }
+}
+
+function renderSharesList(shares) {
+  return shares.map(function(s) {
+    var typeLabel = s.type === '1' ? 'обыкн.' : (s.type === '2' ? 'преф.' : '');
+    var meta = [
+      s.price !== null && s.price !== undefined ? formatPrice(s.price) : null,
+      s.cap ? 'кап. ' + formatMoney(s.cap) : null,
+      s.listLevel ? 'листинг ' + s.listLevel : null
+    ].filter(Boolean).join(' · ');
+    var url = STOCK_CALC_URL + '?ticker=' + encodeURIComponent(s.secid);
+    return '<a href="' + url + '" target="_blank" class="moex-item" style="text-decoration:none; display:block;">'
+      + '<span class="moex-item-name">' + escHtml(s.shortname || s.name) + '</span>'
+      + '<span class="moex-item-ticker">' + escHtml(s.secid) + (typeLabel ? ' · ' + typeLabel : '') + '</span>'
+      + '<div class="moex-item-details">' + escHtml(meta || '—') + ' &nbsp;→ открыть в Акциаторе</div>'
+      + '</a>';
+  }).join('');
+}
+
+function renderBondsList(bonds) {
+  return bonds.map(function(b) {
+    var url = BOND_CALC_URL + '?issuer=' + encodeURIComponent(b.secid);
+    var isin = b.isin ? ' · ISIN ' + escHtml(b.isin) : '';
+    return '<a href="' + url + '" target="_blank" class="moex-item" style="text-decoration:none; display:block;">'
+      + '<span class="moex-item-name">' + escHtml(b.shortname || b.name || b.secid) + '</span>'
+      + '<span class="moex-item-ticker">' + escHtml(b.secid) + '</span>'
+      + '<div class="moex-item-details">' + escHtml(b.name || '') + isin + ' &nbsp;→ открыть в Облигаторе</div>'
+      + '</a>';
+  }).join('');
 }
 
 // ==================== СОБЫТИЯ ====================
@@ -532,12 +630,23 @@ document.getElementById('moexSearch').addEventListener('keydown', function(e) {
   }
 });
 
-// ==================== DEEP-LINK ?ticker=SBER ====================
+// ==================== DEEP-LINK ?ticker=SBER или ?company=Сбербанк ====================
+async function deepLinkLookup(query) {
+  // Используем стандартный поиск, чтобы найти компанию по бумаге/названию.
+  document.getElementById('moexSearch').value = query;
+  await searchMoex(query);
+  // Берём первую компанию из результата и открываем её
+  var ids = Object.keys(foundEmitters);
+  if (ids.length > 0) {
+    loadCompany(Number(ids[0]));
+  }
+}
+
 (function() {
   var params = new URLSearchParams(window.location.search);
-  var t = params.get('ticker') || params.get('issuer');
+  var t = params.get('ticker') || params.get('issuer') || params.get('company');
   if (t) {
-    loadEmitter(t.toUpperCase());
+    deepLinkLookup(t);
   }
 })();
 
@@ -564,11 +673,11 @@ function renderCmpSlot(idx) {
     + '<button class="btn-remove" onclick="cmpRemove(' + idx + ')" title="Убрать">×</button>'
     + '</div>';
 
-  if (s && s.secid) {
+  if (s && s.emitent_id) {
     return header
       + '<div class="cmp-slot-loaded">'
       +   '<span class="cmp-slot-name">' + escHtml(s.name) + '</span>'
-      +   '<span class="cmp-slot-ticker">' + escHtml(s.secid) + '</span>'
+      +   '<span class="cmp-slot-ticker">' + (s.primaryTicker ? escHtml(s.primaryTicker) : 'компания') + '</span>'
       + '</div>';
   }
 
@@ -593,6 +702,9 @@ function cmpRemove(idx) {
   cmpRender();
 }
 
+// Кэш найденных компаний для каждого слота сравнения
+var cmpFound = {}; // idx -> { [emitent_id]: emitter }
+
 async function cmpSearch(idx) {
   var inp = document.getElementById('cmp-input-' + idx);
   var status = document.getElementById('cmp-status-' + idx);
@@ -610,7 +722,7 @@ async function cmpSearch(idx) {
   results.innerHTML = '';
 
   try {
-    var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(q) + '&limit=200&iss.meta=off';
+    var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(q) + '&limit=300&iss.meta=off';
     var data = await moexFetch(url);
     var cols = data.securities.columns;
     var rows = data.securities.data;
@@ -618,32 +730,34 @@ async function cmpSearch(idx) {
     var items = rows.map(function(r) {
       var d = {}; cols.forEach(function(c, i) { d[c] = r[i]; }); return d;
     }).filter(function(d) {
-      return d.group === 'stock_shares' && (d.type === 'common_share' || d.type === 'preferred_share');
+      if (d.group === 'stock_shares' && (d.type === 'common_share' || d.type === 'preferred_share' || d.type === 'depositary_receipt')) return true;
+      if (d.group === 'stock_bonds' || d.group === 'stock_eurobond') return true;
+      return false;
     });
 
-    if (items.length === 0) {
-      status.textContent = 'По «' + q + '» акций не нашлось.';
+    var emitters = groupByEmitter(items);
+    emitters.sort(function(a, b) { return b.instruments.length - a.instruments.length; });
+
+    if (emitters.length === 0) {
+      status.textContent = 'По «' + q + '» компаний не нашлось.';
       status.className = 'cmp-slot-status error';
       return;
     }
 
-    if (isISIN(q)) {
-      var qu = q.toUpperCase();
-      items.sort(function(a, b) {
-        return ((a.isin || '').toUpperCase() === qu ? 0 : 1) - ((b.isin || '').toUpperCase() === qu ? 0 : 1);
-      });
-    }
+    cmpFound[idx] = {};
+    emitters.forEach(function(e) { cmpFound[idx][e.emitent_id] = e; });
 
-    var seen = {};
-    items = items.filter(function(s) { if (seen[s.secid]) return false; seen[s.secid] = true; return true; });
-
-    status.textContent = 'Найдено: ' + items.length + ' — выбери одну';
+    status.textContent = 'Найдено компаний: ' + emitters.length + ' — выбери одну';
     status.className = 'cmp-slot-status';
-    results.innerHTML = items.slice(0, 10).map(function(s) {
-      var pref = s.type === 'preferred_share' ? ' · преф' : '';
-      return '<div class="moex-item" onclick="cmpPick(' + idx + ', \'' + escHtml(s.secid) + '\')">'
-        + '<span class="moex-item-name">' + escHtml(s.shortname || s.name) + '</span>'
-        + '<span class="moex-item-ticker">' + escHtml(s.secid) + pref + '</span>'
+    results.innerHTML = emitters.slice(0, 10).map(function(e) {
+      var shares = filterShares(e.instruments).length;
+      var bonds = filterBonds(e.instruments).length;
+      var bits = [];
+      if (shares) bits.push(shares + ' акций');
+      if (bonds) bits.push(bonds + ' облигаций');
+      return '<div class="moex-item" onclick="cmpPick(' + idx + ', ' + e.emitent_id + ')">'
+        + '<span class="moex-item-name">' + escHtml(e.emitent_title) + '</span>'
+        + '<div class="moex-item-details">' + bits.join(' · ') + '</div>'
         + '</div>';
     }).join('');
   } catch (err) {
@@ -653,36 +767,43 @@ async function cmpSearch(idx) {
   }
 }
 
-async function cmpPick(idx, secid) {
+async function cmpPick(idx, emitent_id) {
   var status = document.getElementById('cmp-status-' + idx);
   status.textContent = 'Загружаю...';
   status.className = 'cmp-slot-status';
 
-  try {
-    var url = MOEX_BASE + '/engines/stock/markets/shares/securities/' + encodeURIComponent(secid) + '.json?iss.meta=off';
-    var data = await moexFetch(url);
-    var sec = pickBestRow(data.securities.columns, data.securities.data, ['TQBR', 'SPEQ']);
-    var md = pickBestRow(data.marketdata.columns, data.marketdata.data, ['TQBR', 'SPEQ']);
-    if (!sec) throw new Error('not found');
-
-    cmpState[idx] = {
-      secid: sec.SECID,
-      name: sec.SECNAME || sec.SHORTNAME,
-      isin: sec.ISIN,
-      listLevel: sec.LISTLEVEL,
-      price: (md && md.LAST !== null && md.LAST !== undefined) ? md.LAST : sec.PREVPRICE,
-      cap: md && md.ISSUECAPITALIZATION
-    };
-    cmpRender();
-  } catch (err) {
-    status.textContent = 'Ошибка загрузки.';
+  var emitter = cmpFound[idx] && cmpFound[idx][emitent_id];
+  if (!emitter) {
+    status.textContent = 'Компания не найдена в кэше — повтори поиск.';
     status.className = 'cmp-slot-status error';
-    console.error(err);
+    return;
   }
+
+  var shares = filterShares(emitter.instruments);
+  var bonds = filterBonds(emitter.instruments);
+
+  // Подгружаем cap по всем акциям
+  var sharesData = shares.length > 0
+    ? await Promise.all(shares.map(function(s) { return fetchShareMarketdata(s.secid); }))
+    : [];
+  var totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
+  var primaryShare = sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0];
+
+  cmpState[idx] = {
+    emitent_id: emitter.emitent_id,
+    name: emitter.emitent_title,
+    inn: emitter.emitent_inn,
+    sharesCount: shares.length,
+    bondsCount: bonds.length,
+    totalCap: totalCap,
+    primaryTicker: primaryShare && primaryShare.secid,
+    primaryListLevel: primaryShare && primaryShare.listLevel
+  };
+  cmpRender();
 }
 
 function cmpRenderTable() {
-  var loaded = cmpState.filter(function(s) { return s && s.secid; });
+  var loaded = cmpState.filter(function(s) { return s && s.emitent_id; });
   var wrap = document.getElementById('compare-table-wrap');
   if (loaded.length < 2) {
     wrap.style.display = 'none';
@@ -690,36 +811,44 @@ function cmpRenderTable() {
   }
   wrap.style.display = 'block';
 
-  // Лучшие значения
-  var prices = loaded.map(function(s) { return Number(s.price) || null; });
-  var caps = loaded.map(function(s) { return Number(s.cap) || null; });
+  var caps = loaded.map(function(s) { return Number(s.totalCap) || 0; });
+  var maxCap = Math.max.apply(null, caps);
+  var bestCapIdx = maxCap > 0 ? caps.indexOf(maxCap) : -1;
 
   var rows = [
     {
-      label: 'Цена',
-      values: loaded.map(function(s) { return formatPrice(s.price); }),
-      // Для цены «лучше» ниже = дешевле
-      bestIdx: prices.every(function(p) { return p === null; }) ? -1
-        : prices.indexOf(Math.min.apply(null, prices.filter(function(p) { return p !== null; }))),
-      cmpEmoji: '💰'
-    },
-    {
-      label: 'Капитализация',
-      values: loaded.map(function(s) { return formatMoney(s.cap); }),
-      // Для капы «лучше» больше
-      bestIdx: caps.every(function(c) { return c === null; }) ? -1
-        : caps.indexOf(Math.max.apply(null, caps.filter(function(c) { return c !== null; }))),
+      label: 'Капитализация (акции)',
+      values: loaded.map(function(s) { return s.totalCap > 0 ? formatMoney(s.totalCap) : '—'; }),
+      bestIdx: bestCapIdx,
       cmpEmoji: '🏦'
     },
     {
-      label: 'ISIN',
-      values: loaded.map(function(s) { return s.isin || '—'; }),
+      label: 'Выпусков акций',
+      values: loaded.map(function(s) { return s.sharesCount > 0 ? String(s.sharesCount) : '—'; }),
+      bestIdx: -1,
+      cmpEmoji: '📈'
+    },
+    {
+      label: 'Облигационных выпусков',
+      values: loaded.map(function(s) { return s.bondsCount > 0 ? String(s.bondsCount) : '—'; }),
+      bestIdx: -1,
+      cmpEmoji: '📜'
+    },
+    {
+      label: 'Основной тикер',
+      values: loaded.map(function(s) { return s.primaryTicker || '—'; }),
       bestIdx: -1,
       cmpEmoji: ''
     },
     {
-      label: 'Листинг',
-      values: loaded.map(function(s) { return s.listLevel ? 'Уровень ' + s.listLevel : '—'; }),
+      label: 'Листинг основной акции',
+      values: loaded.map(function(s) { return s.primaryListLevel ? 'Уровень ' + s.primaryListLevel : '—'; }),
+      bestIdx: -1,
+      cmpEmoji: ''
+    },
+    {
+      label: 'ИНН',
+      values: loaded.map(function(s) { return s.inn || '—'; }),
       bestIdx: -1,
       cmpEmoji: ''
     }
@@ -727,7 +856,7 @@ function cmpRenderTable() {
 
   var html = '<table class="cmp-table"><thead><tr><th>Метрика</th>';
   loaded.forEach(function(s) {
-    html += '<th>' + escHtml(s.secid) + '</th>';
+    html += '<th>' + escHtml(s.name) + '</th>';
   });
   html += '</tr></thead><tbody>';
 
@@ -741,14 +870,6 @@ function cmpRenderTable() {
     html += '</tr>';
   });
   html += '</tbody></table>';
-
-  // Добавим строку с названиями (кратко) под заголовком
-  var nameRow = '<tr style="background: var(--bg-page);"><td class="cmp-metric">Название</td>';
-  loaded.forEach(function(s) {
-    nameRow += '<td class="cmp-value" style="font-size: 12px;">' + escHtml(s.name) + '</td>';
-  });
-  nameRow += '</tr>';
-  html = html.replace('<tbody>', '<tbody>' + nameRow);
 
   document.getElementById('compare-table').innerHTML = html;
 }
