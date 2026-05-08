@@ -518,6 +518,11 @@ async function searchMoex(query) {
     status.textContent = pluralizeRu(emitters.length, ['Найдена', 'Найдено', 'Найдено']) + ' '
       + pluralizeRu(emitters.length, ['компания', 'компании', 'компаний']) + ': ' + emitters.length + hint;
     status.className = 'moex-status success';
+
+    // Если результат единственный — сразу открываем компанию, чтобы не требовать ещё одного клика
+    if (emitters.length === 1) {
+      loadCompany(emitters[0].emitent_id);
+    }
   } catch (err) {
     status.textContent = 'Не удалось подключиться к бирже. Проверь интернет.';
     status.className = 'moex-status error';
