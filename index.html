@@ -289,7 +289,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.2.1 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.3 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -630,16 +630,16 @@ async function loadFundamentals() {
       updated: maxFundUpdate ? maxFundUpdate.slice(0, 10) : ''
     };
 
-    // Группируем dividends по тикеру: сохраняем TTM и forecast отдельно
+    // Группируем dividends по тикеру: TTM, forecast, history
     DIVS_DATA = {};
     divRows.forEach(function(r) {
-      if (!DIVS_DATA[r.ticker]) DIVS_DATA[r.ticker] = {};
+      if (!DIVS_DATA[r.ticker]) DIVS_DATA[r.ticker] = { history: [] };
       var d = DIVS_DATA[r.ticker];
-      if (r.is_paid && r.period_label && r.period_label.indexOf('TTM') === 0) {
+      if (r.period_label && r.period_label.indexOf('TTM') === 0 && r.is_paid) {
         d.ttm_amount = r.amount;
         d.ttm_yield = r.yield_pct;
       } else if (!r.is_paid) {
-        // Берём ближайший по дате прогноз (первый — самый поздний)
+        // Прогноз — берём ближайший по дате
         if (!d.forecast) {
           d.forecast = {
             period: r.period_label,
@@ -648,7 +648,20 @@ async function loadFundamentals() {
             ex_date: r.ex_date ? formatDateRu(r.ex_date) : null
           };
         }
+      } else {
+        // Выплаченные — в историю
+        d.history.push({
+          period: r.period_label,
+          amount: r.amount,
+          yield: r.yield_pct,
+          ex_date: r.ex_date
+        });
       }
+    });
+    // Сортируем историю по дате убыв.
+    Object.keys(DIVS_DATA).forEach(function(t) {
+      var hist = DIVS_DATA[t].history;
+      hist.sort(function(a, b) { return (b.ex_date || '') > (a.ex_date || '') ? 1 : -1; });
     });
     DIVS_META = { source: 'Supabase ← dohod.ru', updated: '' };
 
@@ -869,6 +882,24 @@ function renderDividends(ticker, companyName) {
     }
 
     html += '</div>';
+
+    // История выплат
+    if (d.history && d.history.length > 0) {
+      html += '<div class="group-title" style="margin-top: 12px;">История выплат · ' + escHtml(t) + '</div>';
+      html += '<table class="cmp-table"><thead><tr>'
+        + '<th>Период</th><th style="text-align:right;">Сумма</th>'
+        + '<th style="text-align:right;">Доходность</th><th>Отсечка</th>'
+        + '</tr></thead><tbody>';
+      d.history.slice(0, 8).forEach(function(p) {
+        html += '<tr>'
+          + '<td>' + escHtml(p.period || '') + '</td>'
+          + '<td style="text-align:right;font-weight:700;">' + fmtNum(p.amount) + ' ₽</td>'
+          + '<td style="text-align:right;">' + (p.yield ? fmtNum(p.yield) + '%' : '—') + '</td>'
+          + '<td>' + (p.ex_date ? formatDateRu(p.ex_date) : '—') + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody></table>';
+    }
   });
 
   if (!anyData) {
