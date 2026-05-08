@@ -283,13 +283,13 @@
     </div>
 
     <div class="stub-block" style="margin-top: 18px;">
-      <b>📊 Дальше — мультипликаторы и рост</b>
-      Когда подключим Supabase — добавится сравнение P/E, P/B, ROE, дивдоходности и динамики. Пока сравниваем по базовым параметрам биржи.
+      <b>📊 Сравнение по мультипликаторам</b>
+      Сейчас бок-о-бок видно базовые биржевые параметры. Сравнение по P/E, P/B, ROE и дивдоходности из Supabase — добавлю следующим шагом.
     </div>
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.1 (каркас) · MOEX ISS
+    Академия «Инвестиции просто» · Фундаменталка v0.2 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -978,6 +978,9 @@ async function loadCompany(emitent_id) {
   renderMultipliers(primaryTicker, emitter.emitent_title);
   renderFinancials(primaryTicker, emitter.emitent_title);
   renderDividends(primaryTicker, emitter.emitent_title);
+
+  // Прикрепляем текущую открытую компанию первым слотом сравнения
+  syncCompareWithCurrent();
 }
 
 function renderSharesList(shares) {
@@ -1268,16 +1271,14 @@ function cmpRenderTable() {
 
 document.getElementById('compareAddBtn').addEventListener('click', cmpAdd);
 
-// Прикрепляем текущую открытую компанию первым слотом
-function cmpPrependCurrent() {
-  if (!currentCompany || !currentCompany.emitent_id) return false;
-  // Уже есть в списке?
-  var already = cmpState.some(function(s) { return s && s.emitent_id === currentCompany.emitent_id; });
-  if (already) return false;
-  // Регистрируем компанию в cache, чтобы можно было удалять/перевыбирать
-  cmpFound[0] = cmpFound[0] || {};
-  cmpFound[0][currentCompany.emitent_id] = currentCompany;
-  // Добавляем как первый слот
+// Гарантирует, что в первом слоте сравнения стоит текущая открытая компания.
+// Если её ещё нет — делает первым; если стоит на другой позиции — поднимает наверх;
+// если уже первая — оставляет; если currentCompany нет — ничего.
+function syncCompareWithCurrent() {
+  if (!currentCompany || !currentCompany.emitent_id) {
+    cmpRender();
+    return;
+  }
   var slot = {
     emitent_id: currentCompany.emitent_id,
     name: currentCompany.emitent_title,
@@ -1288,18 +1289,27 @@ function cmpPrependCurrent() {
     primaryTicker: currentCompany.primaryTicker,
     primaryListLevel: currentCompany.primaryListLevel
   };
+  // Убираем компанию из других позиций (если была), пустые слоты оставляем
+  cmpState = cmpState.filter(function(s) {
+    return !(s && s.emitent_id === currentCompany.emitent_id);
+  });
+  // Удаляем висящие пустые слоты
+  cmpState = cmpState.filter(function(s) { return s && s.emitent_id; });
   cmpState.unshift(slot);
-  return true;
+  cmpRender();
 }
 
 // При открытии вкладки «Сравнение» — гарантируем разумное стартовое состояние
 document.querySelector('.tab[data-tab="compare"]').addEventListener('click', function() {
   // Удаляем пустые висящие слоты, оставляя только с данными
   cmpState = cmpState.filter(function(s) { return s && s.emitent_id; });
-  // Добавляем текущую открытую (если она ещё не в списке)
-  cmpPrependCurrent();
+  // Если текущей компании в списке нет — добавим
+  if (currentCompany && currentCompany.emitent_id) {
+    var already = cmpState.some(function(s) { return s.emitent_id === currentCompany.emitent_id; });
+    if (!already) syncCompareWithCurrent();
+  }
   // Гарантируем минимум один пустой слот для добавления
-  if (cmpState.every(function(s) { return s && s.emitent_id; })) {
+  if (cmpState.length === 0 || cmpState.every(function(s) { return s && s.emitent_id; })) {
     cmpState.push({});
   }
   cmpRender();
