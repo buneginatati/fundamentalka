@@ -218,9 +218,9 @@
         <div id="prof-bonds-list"></div>
       </div>
 
-      <div class="stub-block" style="margin-top: 18px;">
-        <b>📋 Краткая справка и финансы</b>
-        Что за бизнес, как зарабатывает, мультипликаторы (P/E, P/B, ROE), дивиденды, инсайдеры — подтянутся из Supabase, когда он будет готов.
+      <div id="prof-description-block" style="display:none; margin-top: 18px;">
+        <h3 class="section-title">О компании</h3>
+        <div id="prof-description" style="padding: 16px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; line-height: 1.6; color: var(--dark);"></div>
       </div>
     </div>
   </div>
@@ -289,7 +289,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.3 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.4 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -1010,6 +1010,9 @@ async function loadCompany(emitent_id) {
     currentCompany.primaryListLevel = (sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0] || {}).listLevel;
   }
 
+  // Подгружаем краткое описание компании из таблицы emitters (по любому из её тикеров)
+  loadCompanyDescription(primaryTicker || (shareItems[0] && shareItems[0].secid));
+
   // Заполняем остальные табы данными по основному тикеру компании
   renderMultipliers(primaryTicker, emitter.emitent_title);
   renderFinancials(primaryTicker, emitter.emitent_title);
@@ -1034,6 +1037,24 @@ function renderSharesList(shares) {
       + '<div class="moex-item-details">' + escHtml(meta || '—') + ' &nbsp;→ открыть в Акциаторе</div>'
       + '</a>';
   }).join('');
+}
+
+async function loadCompanyDescription(ticker) {
+  var block = document.getElementById('prof-description-block');
+  var box = document.getElementById('prof-description');
+  if (!ticker) { block.style.display = 'none'; return; }
+  try {
+    var rows = await supabaseFetch('emitters?ticker=eq.' + encodeURIComponent(ticker) + '&select=description');
+    if (rows && rows.length && rows[0].description) {
+      box.textContent = rows[0].description;
+      block.style.display = 'block';
+    } else {
+      block.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('description load fail', e);
+    block.style.display = 'none';
+  }
 }
 
 function renderBondsList(bonds) {
