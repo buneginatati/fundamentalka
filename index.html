@@ -141,6 +141,21 @@
     text-transform: uppercase; margin: 18px 0 10px;
   }
   .group-title:first-child { margin-top: 0; }
+
+  /* PRICE CHART CONTROLS */
+  .chart-period-btn {
+    padding: 6px 12px; border-radius: 8px;
+    border: 1.5px solid var(--green-border-strong);
+    background: transparent; color: var(--green);
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.3px;
+  }
+  .chart-period-btn:hover { background: var(--green-bg); }
+  .chart-period-btn.active { background: var(--green); color: var(--white); border-color: var(--green); }
+  .chart-stat { display: inline-flex; align-items: baseline; gap: 5px; }
+  .chart-stat b { color: var(--black); font-weight: 700; font-size: 13px; }
+  .chart-stat.up b { color: var(--score-green); }
+  .chart-stat.down b { color: var(--score-red); }
 </style>
 </head>
 <body>
@@ -206,6 +221,17 @@
           <span class="profile-label">Капитализация (акции)</span>
           <span class="profile-value" id="prof-cap">—</span>
         </div>
+      </div>
+
+      <div id="prof-chart-block" style="display:none; margin-top: 18px;">
+        <h3 class="section-title">Динамика цены</h3>
+        <div id="prof-chart-controls" style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;"></div>
+        <div class="chart-container" style="margin-top:0;">
+          <div class="chart-wrap" style="height:260px;">
+            <canvas id="priceChart"></canvas>
+          </div>
+        </div>
+        <div id="prof-chart-stats" style="margin-top:10px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;"></div>
       </div>
 
       <div id="prof-shares-block" style="display:none; margin-top: 18px;">
@@ -289,7 +315,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.6 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.7 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -1102,9 +1128,123 @@ async function loadCompany(emitent_id) {
 
   // История мультипликаторов и финансов из Supabase report_financials
   loadCompanyHistory(primaryTicker);
+
+  // График динамики цены акции
+  if (primaryTicker) loadPriceChart(primaryTicker);
+  else document.getElementById('prof-chart-block').style.display = 'none';
 }
 
 var HISTORY_CACHE = {};
+var PRICE_CHART = null;
+var PRICE_CHART_TICKER = null;
+var PRICE_CHART_PERIOD = '1Y';
+
+const CHART_PERIODS = [
+  { code: '1M', label: '1 мес', days: 30 },
+  { code: '3M', label: '3 мес', days: 90 },
+  { code: '6M', label: '6 мес', days: 180 },
+  { code: '1Y', label: '1 год', days: 365 },
+  { code: '5Y', label: '5 лет', days: 365 * 5 },
+];
+
+async function loadPriceChart(ticker) {
+  if (!ticker) return;
+  PRICE_CHART_TICKER = ticker;
+  document.getElementById('prof-chart-block').style.display = 'block';
+  // Кнопки периода
+  var ctrl = document.getElementById('prof-chart-controls');
+  ctrl.innerHTML = CHART_PERIODS.map(function(p) {
+    return '<button class="chart-period-btn ' + (p.code === PRICE_CHART_PERIOD ? 'active' : '')
+      + '" onclick="setPricePeriod(\'' + p.code + '\')">' + p.label + '</button>';
+  }).join('');
+  await drawPriceChart();
+}
+
+function setPricePeriod(code) {
+  PRICE_CHART_PERIOD = code;
+  document.querySelectorAll('.chart-period-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent === (CHART_PERIODS.find(function(p) { return p.code === code; }) || {}).label);
+  });
+  drawPriceChart();
+}
+
+async function drawPriceChart() {
+  var ticker = PRICE_CHART_TICKER;
+  if (!ticker) return;
+  var period = CHART_PERIODS.find(function(p) { return p.code === PRICE_CHART_PERIOD; }) || CHART_PERIODS[3];
+  var to = new Date();
+  var from = new Date(to.getTime() - period.days * 86400000);
+  var fromStr = from.toISOString().slice(0, 10);
+  // MOEX интервалы: 24=день, 7=неделя, 31=месяц
+  var interval = period.days <= 180 ? 24 : (period.days <= 1095 ? 7 : 31);
+
+  try {
+    var data = await moexFetch(MOEX_BASE
+      + '/engines/stock/markets/shares/securities/' + encodeURIComponent(ticker)
+      + '/candles.json?from=' + fromStr + '&interval=' + interval + '&iss.meta=off');
+    var cols = data.candles.columns;
+    var rows = data.candles.data;
+    var iClose = cols.indexOf('close');
+    var iBegin = cols.indexOf('begin');
+    var labels = rows.map(function(r) { return r[iBegin].slice(0, 10); });
+    var closes = rows.map(function(r) { return r[iClose]; });
+
+    if (closes.length === 0) {
+      document.getElementById('prof-chart-stats').textContent = 'Нет данных за выбранный период.';
+      if (PRICE_CHART) { PRICE_CHART.destroy(); PRICE_CHART = null; }
+      return;
+    }
+
+    var ctx = document.getElementById('priceChart').getContext('2d');
+    if (PRICE_CHART) PRICE_CHART.destroy();
+    PRICE_CHART = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: ticker + ' · цена закрытия, ₽',
+          data: closes,
+          borderColor: '#3B3FBF',
+          backgroundColor: 'rgba(59,63,191,0.08)',
+          fill: true, tension: 0.2,
+          pointRadius: 0, borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1a2e', titleColor: '#fff', bodyColor: '#fff',
+            displayColors: false,
+            callbacks: {
+              label: function(ctx) { return Number(ctx.raw).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' ₽'; }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#6b7280', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
+          y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        },
+      }
+    });
+
+    // Статистика: текущая, мин, макс, изменение
+    var first = closes[0], last = closes[closes.length - 1];
+    var min = Math.min.apply(null, closes), max = Math.max.apply(null, closes);
+    var diff = last - first, diffPct = (diff / first) * 100;
+    var diffClass = diff >= 0 ? 'up' : 'down';
+    var sign = diff >= 0 ? '+' : '';
+    document.getElementById('prof-chart-stats').innerHTML = ''
+      + '<span class="chart-stat">текущая <b>' + formatPrice(last) + '</b></span>'
+      + '<span class="chart-stat ' + diffClass + '">за период <b>' + sign + formatPrice(diff) + ' (' + sign + fmtNum(diffPct) + '%)</b></span>'
+      + '<span class="chart-stat">min <b>' + formatPrice(min) + '</b></span>'
+      + '<span class="chart-stat">max <b>' + formatPrice(max) + '</b></span>';
+  } catch (e) {
+    console.error('chart fail', e);
+    document.getElementById('prof-chart-stats').textContent = 'Не удалось загрузить котировки.';
+  }
+}
 
 async function loadCompanyHistory(ticker) {
   if (!ticker) return;
