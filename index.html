@@ -289,7 +289,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.4 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.5 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -883,22 +883,73 @@ function renderDividends(ticker, companyName) {
 
     html += '</div>';
 
-    // История выплат
+    // Совокупные выплаты по годам — стиль dohod.ru: каждый год виден, даже без выплат
     if (d.history && d.history.length > 0) {
-      html += '<div class="group-title" style="margin-top: 12px;">История выплат · ' + escHtml(t) + '</div>';
-      html += '<table class="cmp-table"><thead><tr>'
-        + '<th>Период</th><th style="text-align:right;">Сумма</th>'
-        + '<th style="text-align:right;">Доходность</th><th>Отсечка</th>'
-        + '</tr></thead><tbody>';
-      d.history.slice(0, 8).forEach(function(p) {
-        html += '<tr>'
-          + '<td>' + escHtml(p.period || '') + '</td>'
-          + '<td style="text-align:right;font-weight:700;">' + fmtNum(p.amount) + ' ₽</td>'
-          + '<td style="text-align:right;">' + (p.yield ? fmtNum(p.yield) + '%' : '—') + '</td>'
-          + '<td>' + (p.ex_date ? formatDateRu(p.ex_date) : '—') + '</td>'
-          + '</tr>';
+      var byYear = {};
+      d.history.forEach(function(p) {
+        // Извлекаем год: либо из period_label «2024 год», либо из ex_date
+        var year = null;
+        var m = (p.period || '').match(/(\d{4})/);
+        if (m) year = parseInt(m[1], 10);
+        else if (p.ex_date) year = parseInt(p.ex_date.slice(0, 4), 10);
+        if (!year) return;
+        if (!byYear[year]) byYear[year] = 0;
+        byYear[year] += Number(p.amount) || 0;
       });
-      html += '</tbody></table>';
+
+      var years = Object.keys(byYear).map(Number);
+      if (years.length > 0) {
+        var minY = Math.min.apply(null, years);
+        var maxY = Math.max.apply(null, years);
+        // Расширяем до текущего года, если последняя выплата была раньше
+        var currentYear = new Date().getFullYear();
+        if (maxY < currentYear) maxY = currentYear;
+
+        html += '<div class="group-title" style="margin-top: 12px;">Совокупные выплаты по годам · ' + escHtml(t) + '</div>';
+        html += '<table class="cmp-table"><thead><tr>'
+          + '<th>Год</th>'
+          + '<th style="text-align:right;">Дивиденд (₽)</th>'
+          + '<th style="text-align:right;">Изм. к пред. году</th>'
+          + '</tr></thead><tbody>';
+
+        var prevAmount = null;
+        for (var y = maxY; y >= minY; y--) {
+          var amount = byYear[y] || 0;
+          var diffStr = '—';
+          var diffColor = 'var(--muted)';
+          if (prevAmount !== null) {
+            // Сравниваем с более новым (выше в таблице)
+            // Но мы идём сверху вниз, prevAmount — это год y+1 уже отрисованный.
+            // По логике dohod, сравнивается «текущий год к предыдущему», т.е.
+            // amount(y) vs amount(y-1). Поэтому diff показываем для текущей строки
+            // как amount(y) к amount(y-1) — для этого надо смотреть в прошлый год, не предыдущий.
+          }
+          // Проще: считаем diff между ЭТОЙ строкой (год y) и СЛЕДУЮЩЕЙ младшей строкой (год y-1)
+          var nextOlder = byYear[y - 1];
+          if (amount === 0 && (nextOlder === undefined || nextOlder === 0)) {
+            diffStr = 'n/a';
+          } else if (amount === 0 && nextOlder > 0) {
+            diffStr = '−100%'; diffColor = 'var(--score-red)';
+          } else if (nextOlder === undefined || nextOlder === null) {
+            diffStr = 'n/a';
+          } else if (nextOlder === 0) {
+            diffStr = 'нов.'; diffColor = 'var(--score-green)';
+          } else {
+            var pct = ((amount - nextOlder) / nextOlder) * 100;
+            var sign = pct >= 0 ? '+' : '';
+            diffStr = sign + fmtNum(pct) + '%';
+            diffColor = pct >= 0 ? 'var(--score-green)' : 'var(--score-red)';
+          }
+
+          html += '<tr>'
+            + '<td>' + y + '</td>'
+            + '<td style="text-align:right;font-weight:700;">' + (amount > 0 ? fmtNum(amount) : '0') + '</td>'
+            + '<td style="text-align:right;color:' + diffColor + ';font-weight:600;">' + diffStr + '</td>'
+            + '</tr>';
+          prevAmount = amount;
+        }
+        html += '</tbody></table>';
+      }
     }
   });
 
