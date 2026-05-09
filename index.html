@@ -289,7 +289,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.5 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.6 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -804,10 +804,38 @@ function renderMultipliers(ticker, companyName) {
     html += '</div>';
   }
 
+  // История по годам
+  var hist = HISTORY_CACHE[ticker];
+  if (hist && hist.length > 0) {
+    html += '<div class="group-title" style="margin-top: 18px;">История по годам</div>';
+    html += '<table class="cmp-table"><thead><tr>'
+      + '<th>Год</th>'
+      + '<th style="text-align:right;">P/E</th>'
+      + '<th style="text-align:right;">P/B</th>'
+      + '<th style="text-align:right;">ROE</th>'
+      + '<th style="text-align:right;">ROA</th>'
+      + '<th style="text-align:right;">Прибыль, ₽млрд</th>'
+      + '</tr></thead><tbody>';
+    hist.slice(0, 7).forEach(function(r) {
+      var raw = r.raw || {};
+      var year = (r.period_label || '').match(/(\d{4})/);
+      year = year ? year[1] : '—';
+      html += '<tr>'
+        + '<td>' + year + '</td>'
+        + '<td style="text-align:right;">' + (raw.p_e !== undefined ? fmtNum(raw.p_e) : '—') + '</td>'
+        + '<td style="text-align:right;">' + (raw.p_b !== undefined ? fmtNum(raw.p_b) : '—') + '</td>'
+        + '<td style="text-align:right;">' + (raw.roe !== undefined ? fmtNum(raw.roe) + '%' : '—') + '</td>'
+        + '<td style="text-align:right;">' + (raw.roa !== undefined ? fmtNum(raw.roa) + '%' : '—') + '</td>'
+        + '<td style="text-align:right;">' + (r.net_profit !== null && r.net_profit !== undefined ? fmtNum(r.net_profit) : '—') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
   html += '<div class="metrics-source">'
     + 'Источник: ' + escHtml(FUND_META.source || '—')
-    + ' · Снимок от ' + escHtml(FUND_META.updated || '—')
-    + '. Когда подключим Supabase — цифры будут обновляться автоматически.'
+    + (FUND_META.updated ? ' · Снимок от ' + escHtml(FUND_META.updated) : '')
+    + '. Обновляется автоматически по понедельникам.'
     + '</div>';
 
   el.innerHTML = html;
@@ -1071,6 +1099,32 @@ async function loadCompany(emitent_id) {
 
   // Прикрепляем текущую открытую компанию первым слотом сравнения
   syncCompareWithCurrent();
+
+  // История мультипликаторов и финансов из Supabase report_financials
+  loadCompanyHistory(primaryTicker);
+}
+
+var HISTORY_CACHE = {};
+
+async function loadCompanyHistory(ticker) {
+  if (!ticker) return;
+  if (HISTORY_CACHE[ticker]) {
+    if (currentCompany && currentCompany.primaryTicker === ticker) {
+      renderMultipliers(ticker, currentCompany.emitent_title);
+    }
+    return;
+  }
+  try {
+    var rows = await supabaseFetch('report_financials?ticker=eq.' + encodeURIComponent(ticker)
+      + '&select=*&order=period_end.desc');
+    HISTORY_CACHE[ticker] = rows || [];
+    if (currentCompany && currentCompany.primaryTicker === ticker) {
+      renderMultipliers(ticker, currentCompany.emitent_title);
+    }
+  } catch (e) {
+    console.error('history fail', e);
+    HISTORY_CACHE[ticker] = [];
+  }
 }
 
 function renderSharesList(shares) {
