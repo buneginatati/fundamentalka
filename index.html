@@ -13,10 +13,10 @@
 <style>
   /* Локальные дополнения, специфичные только для Фундаменталки */
   .stub-block {
-    padding: 28px 20px;
+    padding: 28px 24px;
     border: 1.5px dashed var(--green-border-strong);
-    border-radius: 12px;
-    background: var(--green-bg);
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(59,63,191,0.08) 0%, rgba(59,63,191,0.03) 100%);
     text-align: center;
     color: var(--green);
     font-size: 13px;
@@ -55,8 +55,9 @@
 
   /* COMPARE */
   .cmp-slot {
-    padding: 14px; border-radius: 12px; background: var(--bg-card);
-    border: 1px solid var(--border); margin-bottom: 10px;
+    padding: 18px 20px; border-radius: 20px; background: var(--bg-card);
+    border: 1.5px solid var(--border); margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
   .cmp-slot-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -90,8 +91,9 @@
 
   .cmp-table {
     width: 100%; border-collapse: collapse; font-size: 13px;
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
   .cmp-table th, .cmp-table td {
     padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -109,36 +111,73 @@
   .cmp-table .cmp-value.worst { color: var(--muted); }
   .cmp-emoji { margin-right: 4px; }
 
-  /* MULTIPLIERS / FINANCIALS / DIVIDENDS */
+  /* Override design-system .moex-item под плиточный стиль */
+  .moex-item {
+    border-radius: 16px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    background: var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .moex-item:hover {
+    border-color: var(--green-border-strong);
+    background: var(--green-bg);
+    transform: translateY(-1px);
+  }
+  .moex-show-all-btn {
+    border-radius: 16px;
+  }
+
+  /* MULTIPLIERS / FINANCIALS / DIVIDENDS — плиточный стиль */
   .metrics-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 18px;
   }
   .metric-card {
-    padding: 14px 16px; background: var(--bg-card);
-    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; border-radius: 20px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
-  .metric-card.zone-green  { border-color: rgba(46,139,87,0.5);  background: rgba(46,139,87,0.05); }
-  .metric-card.zone-yellow { border-color: rgba(212,154,0,0.5);  background: rgba(212,154,0,0.05); }
-  .metric-card.zone-red    { border-color: rgba(192,57,43,0.5);  background: rgba(192,57,43,0.05); }
-  .metric-card.zone-na     { background: rgba(0,0,0,0.02); }
+  .metric-card.zone-green  {
+    background: linear-gradient(135deg, rgba(46,139,87,0.18) 0%, rgba(46,139,87,0.05) 100%);
+    border-color: rgba(46,139,87,0.40);
+  }
+  .metric-card.zone-yellow {
+    background: linear-gradient(135deg, rgba(212,154,0,0.18) 0%, rgba(212,154,0,0.05) 100%);
+    border-color: rgba(212,154,0,0.40);
+  }
+  .metric-card.zone-red    {
+    background: linear-gradient(135deg, rgba(192,57,43,0.16) 0%, rgba(192,57,43,0.04) 100%);
+    border-color: rgba(192,57,43,0.40);
+  }
+  .metric-card.zone-na     {
+    background: linear-gradient(135deg, #ffffff 0%, #fbf6ed 100%);
+    border-color: rgba(180,160,130,0.30);
+  }
 
   .metric-label {
     font-size: 11px; color: var(--muted); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px;
   }
-  .metric-value { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -0.3px; }
-  .metric-card.zone-green  .metric-value { color: var(--score-green); }
-  .metric-card.zone-yellow .metric-value { color: var(--score-yellow); }
-  .metric-card.zone-red    .metric-value { color: var(--score-red); }
-  .metric-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .metric-value { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -0.3px; line-height: 1.15; }
+  .metric-card.zone-green  .metric-label { color: #1f6e44; }
+  .metric-card.zone-green  .metric-value { color: #1a5638; }
+  .metric-card.zone-yellow .metric-label { color: #7a5800; }
+  .metric-card.zone-yellow .metric-value { color: #5e4400; }
+  .metric-card.zone-red    .metric-label { color: #8a2920; }
+  .metric-card.zone-red    .metric-value { color: #6b2018; }
+  .metric-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
   .metric-na .metric-value { color: var(--muted); font-size: 18px; }
   .metrics-source {
-    margin-top: 14px; padding: 10px 14px; font-size: 11px; color: var(--muted);
-    background: var(--bg-page); border-radius: 8px; line-height: 1.5;
+    margin-top: 18px; padding: 14px 18px; font-size: 11px; color: var(--muted);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; line-height: 1.5;
   }
   .group-title {
-    font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1px;
-    text-transform: uppercase; margin: 18px 0 10px;
+    font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1.5px;
+    text-transform: uppercase; margin: 22px 0 12px;
   }
   .group-title:first-child { margin-top: 0; }
 
@@ -408,7 +447,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.14 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.15 · MOEX ISS + Supabase
   </div>
 </div>
 
