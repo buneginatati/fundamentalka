@@ -153,9 +153,38 @@
     border-color: rgba(192,57,43,0.40);
   }
   .metric-card.zone-na     {
-    background: linear-gradient(135deg, #ffffff 0%, #fbf6ed 100%);
-    border-color: rgba(180,160,130,0.30);
+    background: linear-gradient(135deg, #ffffff 0%, #fbf3e3 100%);
+    border-color: rgba(180,160,130,0.42);
+    border-width: 1.5px;
   }
+  .metric-card.zone-na .metric-label { color: #7a5d3a; }
+  .metric-card.zone-na .metric-value { color: #5a431f; }
+
+  /* Цветовые акценты для metric-card вне зональной логики (Финансы и т.п.) */
+  .metric-card.accent-indigo {
+    background: linear-gradient(135deg, rgba(59,63,191,0.13) 0%, rgba(59,63,191,0.04) 100%);
+    border-color: rgba(59,63,191,0.30);
+  }
+  .metric-card.accent-indigo .metric-label { color: #2D2F6B; }
+  .metric-card.accent-indigo .metric-value { color: #2D2F6B; }
+  .metric-card.accent-warm {
+    background: linear-gradient(135deg, rgba(229,161,0,0.16) 0%, rgba(229,161,0,0.05) 100%);
+    border-color: rgba(229,161,0,0.35);
+  }
+  .metric-card.accent-warm .metric-label { color: #8a6300; }
+  .metric-card.accent-warm .metric-value { color: #5e4400; }
+  .metric-card.accent-mint {
+    background: linear-gradient(135deg, rgba(46,139,87,0.20) 0%, rgba(46,139,87,0.06) 100%);
+    border-color: rgba(46,139,87,0.42);
+  }
+  .metric-card.accent-mint .metric-label { color: #1f6e44; }
+  .metric-card.accent-mint .metric-value { color: #1a5638; }
+  .metric-card.accent-rose {
+    background: linear-gradient(135deg, rgba(192,57,43,0.16) 0%, rgba(192,57,43,0.05) 100%);
+    border-color: rgba(192,57,43,0.40);
+  }
+  .metric-card.accent-rose .metric-label { color: #8a2920; }
+  .metric-card.accent-rose .metric-value { color: #6b2018; }
 
   .metric-label {
     font-size: 11px; color: var(--muted); font-weight: 700;
@@ -328,7 +357,10 @@
 <div class="content">
 
   <!-- ПОИСК -->
-  <div class="tab-content active" id="tab-search">
+  <div class="tab-content active" id="tab-search" role="tabpanel">
+    <div style="margin-bottom: 18px; padding: 12px 16px; background: rgba(229,161,0,0.10); border: 1px solid rgba(229,161,0,0.30); border-radius: 14px; font-size: 12px; color: #6e4f00; line-height: 1.5;">
+      ⚠️ Информация ознакомительная, не является индивидуальной инвестиционной рекомендацией. <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); font-weight: 600;">Подробнее</a>
+    </div>
     <h3 class="section-title">Найти компанию-эмитента</h3>
     <div class="moex-search-wrap">
       <input class="input-field moex-input" id="moexSearch" placeholder="Название компании, тикер или ISIN">
@@ -475,26 +507,9 @@
     </div>
   </div>
 
-  <div class="footer" style="text-align: left; padding: 24px 20px; line-height: 1.6;">
-    <div style="margin-bottom: 14px; font-weight: 700; color: var(--dark); font-size: 12px; letter-spacing: 0.4px;">
-      ⚠️ Информация носит ознакомительный характер
-    </div>
-    <p style="margin-bottom: 10px;">
-      Все данные, расчёты и графики на сайте предоставлены исключительно в информационно-образовательных целях и не являются индивидуальной инвестиционной рекомендацией в смысле ст. 6.1 Федерального закона «О рынке ценных бумаг» от 22.04.1996 № 39-ФЗ. Приложение не учитывает ваш инвестиционный профиль, цели, финансовое положение и риск-профиль.
-    </p>
-    <p style="margin-bottom: 10px;">
-      Прошлые результаты не гарантируют будущей доходности. Любые решения о покупке, продаже или владении ценными бумагами вы принимаете самостоятельно и под свою ответственность. Рекомендуем при необходимости обратиться к профессиональному инвестиционному консультанту, имеющему лицензию ЦБ РФ.
-    </p>
-    <p style="margin-bottom: 10px;">
-      Цветовая маркировка мультипликаторов (зелёная/жёлтая/красная) — справочное положение значения относительно общерыночных порогов, а не оценка инвестиционной привлекательности.
-    </p>
-    <p style="margin-bottom: 10px;">
-      Источники данных: MOEX ISS API (биржа), smart-lab.ru (мультипликаторы и финансы), dohod.ru (дивиденды). Все данные взяты из открытых источников. Описания компаний сгенерированы при помощи DeepSeek по открытой информации.
-    </p>
-    <p style="margin-top: 16px; font-size: 11px; color: var(--muted);">
-      16+ · Академия «Инвестиции просто» · Фундаменталка v2.0 · ©&nbsp;2026 ·
-      <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none; font-weight: 600;">Полное соглашение и политика данных</a>
-    </p>
+  <div class="footer" style="text-align: center; padding: 18px 20px; font-size: 11px; line-height: 1.6; color: var(--muted);">
+    16+ · Информация ознакомительная, не является ИИР · Источники: MOEX, smart-lab, dohod · Академия «Инвестиции просто» · v2.0 ·
+    <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none; font-weight: 600;">подробнее →</a>
   </div>
 </div>
 
@@ -971,7 +986,14 @@ function metricCard(label, value, metric, opts) {
   } else {
     displayed = fmtNum(value);
   }
-  return '<div class="metric-card zone-' + zone + (zone === 'na' ? ' metric-na' : '') + '">'
+  // Если задан явный цвет (tile), используем его вместо зональной логики
+  var classes = 'metric-card';
+  if (opts.tile) {
+    classes += ' accent-' + opts.tile;
+  } else {
+    classes += ' zone-' + zone + (zone === 'na' ? ' metric-na' : '');
+  }
+  return '<div class="' + classes + '">'
     + '<div class="metric-label">' + escHtml(label) + '</div>'
     + '<div class="metric-value">' + escHtml(displayed) + '</div>'
     + (opts.hint ? '<div class="metric-hint">' + escHtml(opts.hint) + '</div>' : '')
@@ -1065,17 +1087,17 @@ function renderFinancials(ticker, companyName) {
   }
 
   var html = '<div class="metrics-grid">';
-  html += metricCard('Капитализация', f.cap_bn_rub, null, { format: 'bnrub', noZone: true });
+  html += metricCard('Капитализация', f.cap_bn_rub, null, { format: 'bnrub', tile: 'indigo' });
   if (f.ev_bn_rub !== undefined && f.ev_bn_rub !== null) {
-    html += metricCard('EV (рыночная стоимость)', f.ev_bn_rub, null, { format: 'bnrub', noZone: true, hint: 'капа + чистый долг' });
+    html += metricCard('EV (рыночная стоимость)', f.ev_bn_rub, null, { format: 'bnrub', tile: 'warm', hint: 'капа + чистый долг' });
   }
   if (f.revenue !== undefined && f.revenue !== null) {
-    html += metricCard('Выручка', f.revenue, null, { format: 'bnrub', noZone: true });
+    html += metricCard('Выручка', f.revenue, null, { format: 'bnrub', tile: 'mint' });
   }
   if (f.net_op_income !== undefined && f.net_op_income !== null) {
-    html += metricCard('Чистый операционный доход', f.net_op_income, null, { format: 'bnrub', noZone: true });
+    html += metricCard('Чистый операционный доход', f.net_op_income, null, { format: 'bnrub', tile: 'mint' });
   }
-  html += metricCard('Чистая прибыль', f.net_profit, null, { format: 'bnrub', noZone: true });
+  html += metricCard('Чистая прибыль', f.net_profit, null, { format: 'bnrub', tile: 'rose' });
   html += '</div>';
   html += '<div class="metrics-source">Источник: ' + escHtml(FUND_META.source) + ' · ' + escHtml(FUND_META.updated) + '</div>';
   el.innerHTML = html;
