@@ -2,8 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Фундаменталка — Инвестиции просто</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://iss.moex.com https://hlpfobpuwvoiuxdvhczb.supabase.co; frame-ancestors https://web.telegram.org https://t.me 'self'; base-uri 'self'; form-action 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="rating" content="general">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,7 +51,7 @@
     border-radius: 8px; color: var(--green); font-size: 12px;
     font-weight: 700; cursor: pointer; text-decoration: none;
   }
-  .nav-back-link:hover { background: var(--green); color: var(--white); }
+
   .empty-state {
     padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;
   }
@@ -84,7 +87,7 @@
     border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: inherit;
   }
-  .cmp-slot-search button:hover { background: var(--green-light); }
+
   .cmp-slot-status { font-size: 11px; color: var(--muted); margin-top: 6px; min-height: 14px; }
   .cmp-slot-status.error { color: var(--red); }
   .cmp-slot-results { margin-top: 8px; max-height: 200px; overflow-y: auto; }
@@ -120,11 +123,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     transition: border-color 0.2s, transform 0.2s;
   }
-  .moex-item:hover {
-    border-color: var(--green-border-strong);
-    background: var(--green-bg);
-    transform: translateY(-1px);
-  }
+
   .moex-show-all-btn {
     border-radius: 16px;
   }
@@ -208,7 +207,7 @@
     transition: box-shadow 0.2s, transform 0.2s;
   }
   .tile-link { cursor: pointer; }
-  .tile-link:hover { box-shadow: 0 4px 12px rgba(59,63,191,0.10); transform: translateY(-1px); }
+
 
   .tile-indigo { background: linear-gradient(135deg, rgba(59,63,191,0.10) 0%, rgba(59,63,191,0.04) 100%); border-color: rgba(59,63,191,0.18); }
   .tile-warm   { background: linear-gradient(135deg, rgba(229,161,0,0.14) 0%, rgba(229,161,0,0.05) 100%); border-color: rgba(229,161,0,0.30); }
@@ -257,6 +256,21 @@
   .tile-up   .tile-sub { color: var(--score-green); font-weight: 700; }
   .tile-down .tile-sub { color: var(--score-red); font-weight: 700; }
 
+  /* Focus-стили для клавиатурной навигации */
+  .tab:focus-visible,
+  button:focus-visible,
+  .input-field:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* На мобильных bento-third делаем full-width, чтобы не было «сирот» */
+  @media (max-width: 600px) {
+    .bento-third { grid-column: span 2 !important; }
+  }
+
   /* PRICE CHART CONTROLS */
   .chart-period-btn {
     padding: 6px 12px; border-radius: 8px;
@@ -265,12 +279,24 @@
     font-size: 12px; font-weight: 700; cursor: pointer;
     font-family: inherit; letter-spacing: 0.3px;
   }
-  .chart-period-btn:hover { background: var(--green-bg); }
+
   .chart-period-btn.active { background: var(--green); color: var(--white); border-color: var(--green); }
   .chart-stat { display: inline-flex; align-items: baseline; gap: 5px; }
   .chart-stat b { color: var(--black); font-weight: 700; font-size: 13px; }
   .chart-stat.up b { color: var(--score-green); }
   .chart-stat.down b { color: var(--score-red); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nav-back-link:hover { background: var(--green); color: var(--white); }
+    .cmp-slot-search button:hover { background: var(--green-light); }
+    .moex-item:hover {
+        border-color: var(--green-border-strong);
+        background: var(--green-bg);
+        transform: translateY(-1px);
+      }
+    .tile-link:hover { box-shadow: 0 4px 12px rgba(59,63,191,0.10); transform: translateY(-1px); }
+    .chart-period-btn:hover { background: var(--green-bg); }
+  }
 </style>
 </head>
 <body>
@@ -288,15 +314,15 @@
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-tab="search">Поиск</button>
-  <button class="tab" data-tab="profile">Профиль</button>
-  <button class="tab" data-tab="financials">Финансы</button>
-  <button class="tab" data-tab="multipliers">Мультипликаторы</button>
-  <button class="tab" data-tab="dividends">Дивиденды</button>
-  <button class="tab" data-tab="insiders" style="display:none;">Инсайдеры</button>
-  <button class="tab" data-tab="calendar">Календарь</button>
-  <button class="tab" data-tab="compare">Сравнение</button>
+<div class="tabs" role="tablist" aria-label="Разделы Фундаменталки">
+  <button class="tab active" data-tab="search" role="tab" aria-selected="true" aria-controls="tab-search">Поиск</button>
+  <button class="tab" data-tab="profile" role="tab" aria-selected="false" aria-controls="tab-profile">Профиль</button>
+  <button class="tab" data-tab="financials" role="tab" aria-selected="false" aria-controls="tab-financials">Финансы</button>
+  <button class="tab" data-tab="multipliers" role="tab" aria-selected="false" aria-controls="tab-multipliers">Мультипликаторы</button>
+  <button class="tab" data-tab="dividends" role="tab" aria-selected="false" aria-controls="tab-dividends">Дивиденды</button>
+  <button class="tab" data-tab="insiders" role="tab" aria-selected="false" aria-controls="tab-insiders" style="display:none;">Инсайдеры</button>
+  <button class="tab" data-tab="calendar" role="tab" aria-selected="false" aria-controls="tab-calendar">Календарь</button>
+  <button class="tab" data-tab="compare" role="tab" aria-selected="false" aria-controls="tab-compare">Сравнение</button>
 </div>
 
 <div class="content">
@@ -357,6 +383,9 @@
         <div class="tile bento-wide" id="prof-description-block" style="display:none;">
           <div class="tile-label">О компании</div>
           <div id="prof-description" style="font-size: 14px; line-height: 1.65; color: var(--dark); margin-top: 4px;"></div>
+          <div style="margin-top: 12px; font-size: 11px; color: var(--muted); font-style: italic;">
+            Описание сгенерировано ИИ по открытым данным — для образовательных целей. Перед принятием решений сверяйтесь с официальными источниками.
+          </div>
         </div>
 
         <!-- График цены (на всю ширину) -->
@@ -457,11 +486,14 @@
       Прошлые результаты не гарантируют будущей доходности. Любые решения о покупке, продаже или владении ценными бумагами вы принимаете самостоятельно и под свою ответственность. Рекомендуем при необходимости обратиться к профессиональному инвестиционному консультанту, имеющему лицензию ЦБ РФ.
     </p>
     <p style="margin-bottom: 10px;">
+      Цветовая маркировка мультипликаторов (зелёная/жёлтая/красная) — справочное положение значения относительно общерыночных порогов, а не оценка инвестиционной привлекательности.
+    </p>
+    <p style="margin-bottom: 10px;">
       Источники данных: MOEX ISS API (биржа), smart-lab.ru (мультипликаторы и финансы), dohod.ru (дивиденды). Все данные взяты из открытых источников. Описания компаний сгенерированы при помощи DeepSeek по открытой информации.
     </p>
     <p style="margin-top: 16px; font-size: 11px; color: var(--muted);">
-      Академия «Инвестиции просто» · Фундаменталка v1.0 · ©&nbsp;2026 ·
-      <a href="legal.html" target="_blank" style="color: var(--green); text-decoration: none; font-weight: 600;">Полное соглашение и политика данных</a>
+      16+ · Академия «Инвестиции просто» · Фундаменталка v2.0 · ©&nbsp;2026 ·
+      <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none; font-weight: 600;">Полное соглашение и политика данных</a>
     </p>
   </div>
 </div>
@@ -485,10 +517,17 @@ if (tg) {
 // ==================== TABS ====================
 document.querySelectorAll('.tab').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(function(b) {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
     btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    var content = document.getElementById('tab-' + btn.dataset.tab);
+    if (content) content.classList.add('active');
+    // Скролл в начало контента (особенно полезно при переходе из поиска)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
 
@@ -518,7 +557,7 @@ function formatPrice(num) {
 }
 
 function showHint(text) {
-  document.getElementById('hintText').innerHTML = text;
+  document.getElementById('hintText').textContent = text;
   document.getElementById('hintPopup').classList.add('show');
 }
 function closeHint() {
@@ -1200,8 +1239,10 @@ async function fetchShareMarketdata(secid) {
   }
 }
 
+var loadSeq = 0;
 async function loadCompany(emitent_id) {
   if (!emitent_id) return;
+  var mySeq = ++loadSeq;
 
   document.getElementById('profile-empty').style.display = 'none';
   document.getElementById('profile-loaded').style.display = 'block';
@@ -1253,6 +1294,7 @@ async function loadCompany(emitent_id) {
   var primary = null;
   if (shareItems.length > 0) {
     sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
+    if (mySeq !== loadSeq) return; // пользователь успел переключить компанию — не перерисовываем
     totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
     document.getElementById('prof-cap').textContent = totalCap > 0 ? formatMoney(totalCap) : '—';
     document.getElementById('prof-cap-sub').textContent = sharesData.length > 1 ? '(' + sharesData.length + ' выпуска)' : '';
@@ -1455,7 +1497,7 @@ function renderSharesList(shares) {
       s.listLevel ? 'листинг ' + s.listLevel : null
     ].filter(Boolean).join(' · ');
     var url = STOCK_CALC_URL + '?ticker=' + encodeURIComponent(s.secid);
-    return '<a href="' + url + '" target="_blank" class="moex-item" style="text-decoration:none; display:block;">'
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="moex-item" style="text-decoration:none; display:block;">'
       + '<span class="moex-item-name">' + escHtml(s.shortname || s.name) + '</span>'
       + '<span class="moex-item-ticker">' + escHtml(s.secid) + (typeLabel ? ' · ' + typeLabel : '') + '</span>'
       + '<div class="moex-item-details">' + escHtml(meta || '—') + ' &nbsp;→ открыть в Акциаторе</div>'
@@ -1477,7 +1519,7 @@ function renderInsiders(emitter) {
     +   '<p style="margin-bottom: 12px;"><b>Что показывает блок:</b> сделки покупки и продажи акций ' + escHtml(name)
     +   ', которые делают топ-менеджеры и крупные акционеры компании. Закон обязывает таких людей раскрывать каждую сделку.</p>'
     +   '<p style="margin-bottom: 16px;"><b>Зачем смотреть:</b> покупки топами часто говорят о том, что они верят в свою компанию и считают цену хорошей. Массовые продажи — наоборот, повод задуматься.</p>'
-    +   '<a href="' + escHtml(searchUrl) + '" target="_blank" style="display: inline-block; padding: 12px 22px; background: var(--green); color: var(--white); border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none;">Открыть раскрытие на e-disclosure.ru →</a>'
+    +   '<a href="' + escHtml(searchUrl) + '" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 12px 22px; background: var(--green); color: var(--white); border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none;">Открыть раскрытие на e-disclosure.ru →</a>'
     +   '<div style="margin-top: 14px; font-size: 12px; color: var(--muted);">'
     +     'Поиск по ИНН ' + (inn ? escHtml(inn) : '—') + '. На странице компании раздел «Сообщения о существенных фактах» — там фильтр «Сведения о приобретении и (или) отчуждении эмиссионных ценных бумаг лицами, обладающими инсайдерской информацией».'
     +   '</div>'
@@ -1663,7 +1705,7 @@ function renderBondsList(bonds) {
     var url = BOND_CALC_URL + '?issuer=' + encodeURIComponent(b.secid);
     var isin = b.isin ? ' · ISIN ' + escHtml(b.isin) : '';
     var rel = b._relatedTo ? '<span style="color:var(--muted);font-size:10px;font-weight:600;margin-left:6px;">' + escHtml(b._relatedTo).replace(/публичное акционерное общество\s*"?/i, '').replace(/[«»"]/g, '') + '</span>' : '';
-    return '<a href="' + url + '" target="_blank" class="moex-item" style="text-decoration:none; display:block;">'
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="moex-item" style="text-decoration:none; display:block;">'
       + '<span class="moex-item-name">' + escHtml(b.shortname || b.name || b.secid) + '</span>'
       + '<span class="moex-item-ticker">' + escHtml(b.secid) + '</span>'
       + rel
