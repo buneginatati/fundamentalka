@@ -142,18 +142,21 @@
   }
   .group-title:first-child { margin-top: 0; }
 
-  /* BENTO TILES (фирменный плиточный layout) */
+  /* BENTO TILES (фирменный плиточный layout, 6-колоночная сетка) */
   .bento {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     margin-bottom: 20px;
   }
-  .bento-wide { grid-column: 1 / -1; }
-  .bento-2x { grid-column: span 2; }
-  @media (max-width: 480px) {
-    .bento { grid-template-columns: 1fr 1fr; }
-    .bento-2x { grid-column: span 2; }
+  .bento-wide { grid-column: span 6; }    /* full width */
+  .bento-half { grid-column: span 3; }    /* 1/2 — пара в строке */
+  .bento-third { grid-column: span 2; }   /* 1/3 — тройка в строке */
+  @media (max-width: 600px) {
+    .bento { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .bento-wide { grid-column: span 2; }
+    .bento-half { grid-column: span 2; }   /* на узких — full */
+    .bento-third { grid-column: span 1; }  /* на узких — 2 в строке */
   }
 
   .tile {
@@ -285,32 +288,30 @@
           <div class="tile-sub" id="prof-sector"></div>
         </div>
 
-        <!-- Цена + изменение -->
-        <div class="tile tile-warm bento-2x" id="prof-price-tile" style="display:none;">
+        <!-- Малые плитки в одной строке: Листинг | ИНН | Тикеры -->
+        <div class="tile tile-rose bento-third">
+          <div class="tile-label">Листинг</div>
+          <div class="tile-value small" id="prof-listing">—</div>
+        </div>
+        <div class="tile tile-cream bento-third">
+          <div class="tile-label">ИНН</div>
+          <div class="tile-value small" id="prof-inn">—</div>
+        </div>
+        <div class="tile tile-mint bento-third">
+          <div class="tile-label">Тикеры</div>
+          <div class="tile-value small" id="prof-tickers">—</div>
+        </div>
+
+        <!-- Большие плитки 50/50: Цена + Капитализация -->
+        <div class="tile tile-warm bento-half" id="prof-price-tile" style="display:none;">
           <div class="tile-label">Цена · <span id="prof-price-ticker">—</span></div>
           <div class="tile-value" id="prof-price">—</div>
           <div class="tile-sub" id="prof-price-change">—</div>
         </div>
-
-        <!-- Капитализация -->
-        <div class="tile tile-indigo bento-2x">
+        <div class="tile tile-indigo bento-half">
           <div class="tile-label">Капитализация</div>
           <div class="tile-value" id="prof-cap">—</div>
           <div class="tile-sub" id="prof-cap-sub"></div>
-        </div>
-
-        <!-- Малые плитки в одной строке: Тикеры | Листинг | ИНН -->
-        <div class="tile tile-mint">
-          <div class="tile-label">Тикеры</div>
-          <div class="tile-value small" id="prof-tickers">—</div>
-        </div>
-        <div class="tile tile-rose">
-          <div class="tile-label">Листинг</div>
-          <div class="tile-value small" id="prof-listing">—</div>
-        </div>
-        <div class="tile tile-cream">
-          <div class="tile-label">ИНН</div>
-          <div class="tile-value small" id="prof-inn">—</div>
         </div>
 
         <!-- О компании (на всю ширину) -->
@@ -407,7 +408,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.13 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.14 · MOEX ISS + Supabase
   </div>
 </div>
 
