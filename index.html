@@ -447,7 +447,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.15 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.16 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -1219,6 +1219,10 @@ async function loadCompany(emitent_id) {
   var shareItems = filterShares(emitter.instruments);
   var bondItems = filterBonds(emitter.instruments);
 
+  // Собираем облигации связанных юрлиц (Газпром Капитал, Газпром Нефть и т.п.) —
+  // у них отдельный emitent_id, но пользователь ожидает их в материнской компании.
+  bondItems = bondItems.concat(findRelatedBonds(emitter));
+
   if (shareItems.length > 0) {
     document.getElementById('prof-shares-block').style.display = 'block';
     document.getElementById('prof-shares-list').innerHTML = '<div style="padding:10px;color:var(--muted);font-size:12px;">Загружаю данные по акциям...</div>';
@@ -1590,16 +1594,88 @@ async function loadCompanyDescription(ticker) {
   }
 }
 
+// Извлекает «ключевое слово» из эмитент-таитл (например, «Газпром»).
+function extractCompanyKeyword(title) {
+  if (!title) return '';
+  var t = title.toLowerCase()
+    .replace(/публичное\s+акционерное\s+общество/g, '')
+    .replace(/открытое\s+акционерное\s+общество/g, '')
+    .replace(/закрытое\s+акционерное\s+общество/g, '')
+    .replace(/общество\s+с\s+ограниченной\s+ответственностью/g, '')
+    .replace(/\bпао\b|\bоао\b|\bзао\b|\bооо\b/g, '')
+    .replace(/«[^»]*»/g, function(m) { return m.replace(/[«»]/g, ' '); })
+    .replace(/"[^"]*"/g, function(m) { return m.replace(/"/g, ' '); })
+    .replace(/[«»"\(\)]/g, ' ')
+    .replace(/\bимени\b.*$/g, '')
+    .trim();
+  // Берём самое длинное слово (характерное имя бренда)
+  var words = t.split(/[\s,.\-]+/).filter(function(w) { return w.length >= 4; });
+  if (!words.length) return '';
+  words.sort(function(a, b) { return b.length - a.length; });
+  return words[0];
+}
+
+// Ищет в foundEmitters связанные юрлица по ключевому слову материнской компании,
+// возвращает массив их облигаций (с пометкой _relatedTo).
+function findRelatedBonds(emitter) {
+  if (!emitter || !emitter.emitent_title) return [];
+  var keyword = extractCompanyKeyword(emitter.emitent_title);
+  if (!keyword || keyword.length < 4) return [];
+
+  var related = [];
+  Object.keys(foundEmitters).forEach(function(eid) {
+    var e = foundEmitters[eid];
+    if (!e || e.emitent_id === emitter.emitent_id) return;
+    var title = (e.emitent_title || '').toLowerCase();
+    if (title.indexOf(keyword) === -1) return;
+    // Берём только облигации этой связанной компании
+    filterBonds(e.instruments).forEach(function(b) {
+      related.push(Object.assign({}, b, { _relatedTo: e.emitent_title }));
+    });
+  });
+  return related;
+}
+
 function renderBondsList(bonds) {
-  return bonds.map(function(b) {
+  var INITIAL = 12;
+  var html = '';
+
+  // Группируем: сначала прямые облигации, потом «связанные»
+  var direct = bonds.filter(function(b) { return !b._relatedTo; });
+  var related = bonds.filter(function(b) { return b._relatedTo; });
+
+  function bondItemHtml(b) {
     var url = BOND_CALC_URL + '?issuer=' + encodeURIComponent(b.secid);
     var isin = b.isin ? ' · ISIN ' + escHtml(b.isin) : '';
+    var rel = b._relatedTo ? '<span style="color:var(--muted);font-size:10px;font-weight:600;margin-left:6px;">' + escHtml(b._relatedTo).replace(/публичное акционерное общество\s*"?/i, '').replace(/[«»"]/g, '') + '</span>' : '';
     return '<a href="' + url + '" target="_blank" class="moex-item" style="text-decoration:none; display:block;">'
       + '<span class="moex-item-name">' + escHtml(b.shortname || b.name || b.secid) + '</span>'
       + '<span class="moex-item-ticker">' + escHtml(b.secid) + '</span>'
+      + rel
       + '<div class="moex-item-details">' + escHtml(b.name || '') + isin + ' &nbsp;→ открыть в Облигаторе</div>'
       + '</a>';
-  }).join('');
+  }
+
+  function listWithMore(items, hint) {
+    if (items.length === 0) return '';
+    var head = '';
+    if (hint) head += '<div style="font-size:11px;color:var(--muted);font-weight:600;margin:8px 0 8px;text-transform:uppercase;letter-spacing:0.6px;">' + escHtml(hint) + '</div>';
+    var visible = items.slice(0, INITIAL).map(bondItemHtml).join('');
+    var rest = items.slice(INITIAL);
+    var btn = '';
+    if (rest.length > 0) {
+      var hidden = rest.map(bondItemHtml).join('');
+      var rid = 'bonds-more-' + Math.random().toString(36).slice(2, 8);
+      btn = '<div id="' + rid + '" style="display:none;">' + hidden + '</div>'
+        + '<button class="moex-show-all-btn" onclick="this.previousElementSibling.style.display=\'block\'; this.remove();">'
+        + 'Показать ещё ' + rest.length + '</button>';
+    }
+    return head + visible + btn;
+  }
+
+  html += listWithMore(direct);
+  html += listWithMore(related, 'Связанные эмитенты группы');
+  return html;
 }
 
 // ==================== СОБЫТИЯ ====================
