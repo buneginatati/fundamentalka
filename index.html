@@ -182,7 +182,13 @@
   }
   .tile-rose   .tile-label { color: #8a2920; }
   .tile-rose   .tile-value { color: #6b2018; }
-  .tile-cream  { background: linear-gradient(135deg, #fbf6ed 0%, #f5f0e8 100%); border-color: var(--border); }
+  .tile-cream  {
+    background: linear-gradient(135deg, #ffffff 0%, #fbf3e3 100%);
+    border-color: rgba(180,160,130,0.40); border-width: 1.5px;
+    box-shadow: 0 2px 6px rgba(120,100,80,0.06);
+  }
+  .tile-cream  .tile-label { color: #7a5d3a; }
+  .tile-cream  .tile-value { color: #5a431f; }
 
   .tile-hero {
     padding: 28px 26px;
@@ -279,13 +285,6 @@
           <div class="tile-sub" id="prof-sector"></div>
         </div>
 
-        <!-- Капитализация -->
-        <div class="tile tile-indigo bento-2x">
-          <div class="tile-label">Капитализация</div>
-          <div class="tile-value" id="prof-cap">—</div>
-          <div class="tile-sub" id="prof-cap-sub"></div>
-        </div>
-
         <!-- Цена + изменение -->
         <div class="tile tile-warm bento-2x" id="prof-price-tile" style="display:none;">
           <div class="tile-label">Цена · <span id="prof-price-ticker">—</span></div>
@@ -293,22 +292,25 @@
           <div class="tile-sub" id="prof-price-change">—</div>
         </div>
 
-        <!-- ИНН -->
-        <div class="tile tile-cream">
-          <div class="tile-label">ИНН</div>
-          <div class="tile-value small" id="prof-inn">—</div>
+        <!-- Капитализация -->
+        <div class="tile tile-indigo bento-2x">
+          <div class="tile-label">Капитализация</div>
+          <div class="tile-value" id="prof-cap">—</div>
+          <div class="tile-sub" id="prof-cap-sub"></div>
         </div>
 
-        <!-- Тикеры компании (короткий список) -->
+        <!-- Малые плитки в одной строке: Тикеры | Листинг | ИНН -->
         <div class="tile tile-mint">
           <div class="tile-label">Тикеры</div>
           <div class="tile-value small" id="prof-tickers">—</div>
         </div>
-
-        <!-- Листинг основной акции -->
         <div class="tile tile-rose">
           <div class="tile-label">Листинг</div>
           <div class="tile-value small" id="prof-listing">—</div>
+        </div>
+        <div class="tile tile-cream">
+          <div class="tile-label">ИНН</div>
+          <div class="tile-value small" id="prof-inn">—</div>
         </div>
 
         <!-- О компании (на всю ширину) -->
@@ -405,7 +407,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.12 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.13 · MOEX ISS + Supabase
   </div>
 </div>
 
