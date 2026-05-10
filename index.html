@@ -142,6 +142,63 @@
   }
   .group-title:first-child { margin-top: 0; }
 
+  /* BENTO TILES (фирменный плиточный layout) */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .bento-wide { grid-column: 1 / -1; }
+  .bento-2x { grid-column: span 2; }
+  @media (max-width: 480px) {
+    .bento { grid-template-columns: 1fr 1fr; }
+    .bento-2x { grid-column: span 2; }
+  }
+
+  .tile {
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .tile-link { cursor: pointer; }
+  .tile-link:hover { box-shadow: 0 4px 12px rgba(59,63,191,0.10); transform: translateY(-1px); }
+
+  .tile-indigo { background: linear-gradient(135deg, rgba(59,63,191,0.10) 0%, rgba(59,63,191,0.04) 100%); border-color: rgba(59,63,191,0.18); }
+  .tile-warm   { background: linear-gradient(135deg, rgba(229,161,0,0.12) 0%, rgba(229,161,0,0.04) 100%); border-color: rgba(229,161,0,0.22); }
+  .tile-mint   { background: linear-gradient(135deg, rgba(46,139,87,0.10) 0%, rgba(46,139,87,0.03) 100%); border-color: rgba(46,139,87,0.20); }
+  .tile-rose   { background: linear-gradient(135deg, rgba(192,57,43,0.07) 0%, rgba(192,57,43,0.02) 100%); border-color: rgba(192,57,43,0.16); }
+  .tile-cream  { background: linear-gradient(135deg, #fbf6ed 0%, #f5f0e8 100%); border-color: var(--border); }
+
+  .tile-hero {
+    padding: 28px 26px;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+    color: var(--white);
+    border: none;
+  }
+  .tile-hero .tile-label { color: rgba(255,255,255,0.7); }
+  .tile-hero .tile-value { color: var(--white); font-size: 26px; }
+  .tile-hero .tile-sub { color: rgba(255,255,255,0.85); }
+
+  .tile-label {
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.7px;
+    margin-bottom: 10px;
+  }
+  .tile-value {
+    font-size: 22px; font-weight: 800; color: var(--black);
+    letter-spacing: -0.4px; line-height: 1.15;
+  }
+  .tile-value.small { font-size: 16px; }
+  .tile-sub { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  .tile-up   .tile-sub { color: var(--score-green); font-weight: 700; }
+  .tile-down .tile-sub { color: var(--score-red); font-weight: 700; }
+
   /* PRICE CHART CONTROLS */
   .chart-period-btn {
     padding: 6px 12px; border-radius: 8px;
@@ -203,50 +260,77 @@
       Сначала выбери компанию во вкладке «Поиск».
     </div>
     <div id="profile-loaded" style="display:none;">
-      <h3 class="section-title">Профиль компании</h3>
-      <div class="profile-grid">
-        <div class="profile-row">
-          <span class="profile-label">Название</span>
-          <span class="profile-value" id="prof-name">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">ИНН</span>
-          <span class="profile-value" id="prof-inn">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">ОКПО</span>
-          <span class="profile-value" id="prof-okpo">—</span>
-        </div>
-        <div class="profile-row">
-          <span class="profile-label">Капитализация (акции)</span>
-          <span class="profile-value" id="prof-cap">—</span>
-        </div>
-      </div>
+      <div class="bento">
 
-      <div id="prof-chart-block" style="display:none; margin-top: 18px;">
-        <h3 class="section-title">Динамика цены</h3>
-        <div id="prof-chart-controls" style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;"></div>
-        <div class="chart-container" style="margin-top:0;">
-          <div class="chart-wrap" style="height:260px;">
+        <!-- Hero: название компании -->
+        <div class="tile tile-hero bento-wide">
+          <div class="tile-label">Компания</div>
+          <div class="tile-value" id="prof-name">—</div>
+          <div class="tile-sub" id="prof-sector"></div>
+        </div>
+
+        <!-- Капитализация -->
+        <div class="tile tile-indigo bento-2x">
+          <div class="tile-label">Капитализация</div>
+          <div class="tile-value" id="prof-cap">—</div>
+          <div class="tile-sub" id="prof-cap-sub"></div>
+        </div>
+
+        <!-- Цена + изменение -->
+        <div class="tile tile-warm bento-2x" id="prof-price-tile" style="display:none;">
+          <div class="tile-label">Цена · <span id="prof-price-ticker">—</span></div>
+          <div class="tile-value" id="prof-price">—</div>
+          <div class="tile-sub" id="prof-price-change">—</div>
+        </div>
+
+        <!-- ИНН -->
+        <div class="tile tile-cream">
+          <div class="tile-label">ИНН</div>
+          <div class="tile-value small" id="prof-inn">—</div>
+        </div>
+
+        <!-- Тикеры компании (короткий список) -->
+        <div class="tile tile-mint">
+          <div class="tile-label">Тикеры</div>
+          <div class="tile-value small" id="prof-tickers">—</div>
+        </div>
+
+        <!-- Листинг основной акции -->
+        <div class="tile tile-rose">
+          <div class="tile-label">Листинг</div>
+          <div class="tile-value small" id="prof-listing">—</div>
+        </div>
+
+        <!-- О компании (на всю ширину) -->
+        <div class="tile bento-wide" id="prof-description-block" style="display:none;">
+          <div class="tile-label">О компании</div>
+          <div id="prof-description" style="font-size: 14px; line-height: 1.65; color: var(--dark); margin-top: 4px;"></div>
+        </div>
+
+        <!-- График цены (на всю ширину) -->
+        <div class="tile bento-wide" id="prof-chart-block" style="display:none;">
+          <div class="tile-label" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
+            <span>Динамика цены</span>
+            <span id="prof-chart-controls" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
+          </div>
+          <div class="chart-wrap" style="height:240px; position: relative;">
             <canvas id="priceChart"></canvas>
           </div>
+          <div id="prof-chart-stats" style="margin-top:14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;"></div>
         </div>
-        <div id="prof-chart-stats" style="margin-top:10px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;"></div>
-      </div>
 
-      <div id="prof-shares-block" style="display:none; margin-top: 18px;">
-        <h3 class="section-title">Акции компании</h3>
-        <div id="prof-shares-list"></div>
-      </div>
+        <!-- Акции компании (на всю ширину) -->
+        <div class="tile bento-wide" id="prof-shares-block" style="display:none;">
+          <div class="tile-label">Акции компании</div>
+          <div id="prof-shares-list" style="margin-top: 6px;"></div>
+        </div>
 
-      <div id="prof-bonds-block" style="display:none; margin-top: 18px;">
-        <h3 class="section-title">Облигационные выпуски</h3>
-        <div id="prof-bonds-list"></div>
-      </div>
+        <!-- Облигационные выпуски (на всю ширину) -->
+        <div class="tile bento-wide" id="prof-bonds-block" style="display:none;">
+          <div class="tile-label">Облигационные выпуски</div>
+          <div id="prof-bonds-list" style="margin-top: 6px;"></div>
+        </div>
 
-      <div id="prof-description-block" style="display:none; margin-top: 18px;">
-        <h3 class="section-title">О компании</h3>
-        <div id="prof-description" style="padding: 16px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; line-height: 1.6; color: var(--dark);"></div>
       </div>
     </div>
   </div>
@@ -311,7 +395,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.10 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.11 · MOEX ISS + Supabase
   </div>
 </div>
 
@@ -1056,10 +1140,14 @@ async function loadCompany(emitent_id) {
   document.getElementById('profile-loaded').style.display = 'block';
   document.getElementById('prof-name').textContent = 'Загружаю...';
   document.getElementById('prof-inn').textContent = '—';
-  document.getElementById('prof-okpo').textContent = '—';
   document.getElementById('prof-cap').textContent = '—';
+  document.getElementById('prof-tickers').textContent = '—';
+  document.getElementById('prof-listing').textContent = '—';
+  document.getElementById('prof-price-tile').style.display = 'none';
   document.getElementById('prof-shares-block').style.display = 'none';
   document.getElementById('prof-bonds-block').style.display = 'none';
+  var sectorEl = document.getElementById('prof-sector');
+  if (sectorEl) sectorEl.textContent = '';
 
   switchTab('profile');
 
@@ -1074,7 +1162,6 @@ async function loadCompany(emitent_id) {
 
   document.getElementById('prof-name').textContent = emitter.emitent_title || '—';
   document.getElementById('prof-inn').textContent = emitter.emitent_inn || '—';
-  document.getElementById('prof-okpo').textContent = emitter.emitent_okpo || '—';
 
   // Подгружаем marketdata для всех акций компании параллельно
   var shareItems = filterShares(emitter.instruments);
@@ -1092,13 +1179,35 @@ async function loadCompany(emitent_id) {
   var primaryTicker = null;
   var sharesData = [];
   var totalCap = 0;
+  var primary = null;
   if (shareItems.length > 0) {
     sharesData = await Promise.all(shareItems.map(function(s) { return fetchShareMarketdata(s.secid); }));
     totalCap = sharesData.reduce(function(sum, s) { return sum + (Number(s.cap) || 0); }, 0);
     document.getElementById('prof-cap').textContent = totalCap > 0 ? formatMoney(totalCap) : '—';
+    document.getElementById('prof-cap-sub').textContent = sharesData.length > 1 ? '(' + sharesData.length + ' выпуска)' : '';
+    document.getElementById('prof-shares-block').style.display = 'block';
     document.getElementById('prof-shares-list').innerHTML = renderSharesList(sharesData);
-    var primary = sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0];
+    primary = sharesData.find(function(s) { return s.type === '1'; }) || sharesData[0];
     if (primary) primaryTicker = primary.secid;
+
+    // Тикеры (короткой плиткой)
+    var tickerList = sharesData.map(function(s) {
+      return s.secid + (s.type === '2' ? ' преф' : '');
+    }).join(' · ');
+    document.getElementById('prof-tickers').textContent = tickerList;
+
+    // Листинг
+    var listLevel = primary && primary.listLevel;
+    document.getElementById('prof-listing').textContent = listLevel ? 'Уровень ' + listLevel : '—';
+
+    // Цена и изменение к предыдущему дню (приблизительно: LAST vs PREV ~ через MOEX отдельный запрос)
+    if (primary && primary.price !== null && primary.price !== undefined) {
+      document.getElementById('prof-price-tile').style.display = 'block';
+      document.getElementById('prof-price-ticker').textContent = primary.secid;
+      document.getElementById('prof-price').textContent = formatPrice(primary.price);
+      // Предыдущая цена закрытия — попытаемся достать через candles 2 дня
+      loadPriceChange(primary.secid, primary.price);
+    }
   } else {
     document.getElementById('prof-cap').textContent = '— (только облигации)';
   }
@@ -1380,6 +1489,35 @@ function renderCalendar(ticker, companyName) {
 
   html += '<div class="metrics-source">Источник: ' + escHtml(DIVS_META.source || 'dohod.ru') + '</div>';
   el.innerHTML = html;
+}
+
+async function loadPriceChange(ticker, currentPrice) {
+  try {
+    // 7 дней — чтобы зацепить хотя бы один прошлый рабочий день
+    var to = new Date();
+    var from = new Date(to.getTime() - 7 * 86400000);
+    var fromStr = from.toISOString().slice(0, 10);
+    var data = await moexFetch(MOEX_BASE
+      + '/engines/stock/markets/shares/securities/' + encodeURIComponent(ticker)
+      + '/candles.json?from=' + fromStr + '&interval=24&iss.meta=off');
+    var rows = data.candles.data;
+    if (!rows || rows.length < 2) return;
+    var iClose = data.candles.columns.indexOf('close');
+    // Берём предпоследний день (последний — сегодня)
+    var prev = rows[rows.length - 2][iClose];
+    if (!prev || !currentPrice) return;
+    var diff = currentPrice - prev;
+    var diffPct = (diff / prev) * 100;
+    var sign = diff >= 0 ? '+' : '';
+    var tile = document.getElementById('prof-price-tile');
+    if (!tile) return;
+    tile.classList.remove('tile-up', 'tile-down');
+    tile.classList.add(diff >= 0 ? 'tile-up' : 'tile-down');
+    document.getElementById('prof-price-change').textContent =
+      sign + formatPrice(diff) + ' (' + sign + fmtNum(diffPct) + '%) к предыдущему дню';
+  } catch (e) {
+    console.error('price change fail', e);
+  }
 }
 
 async function loadCompanyDescription(ticker) {
