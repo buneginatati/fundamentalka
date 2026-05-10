@@ -149,8 +149,8 @@
     border-color: rgba(212,154,0,0.40);
   }
   .metric-card.zone-red    {
-    background: linear-gradient(135deg, rgba(192,57,43,0.16) 0%, rgba(192,57,43,0.04) 100%);
-    border-color: rgba(192,57,43,0.40);
+    background: linear-gradient(135deg, rgba(192,57,43,0.10) 0%, rgba(192,57,43,0.03) 100%);
+    border-color: rgba(192,57,43,0.28);
   }
   .metric-card.zone-na     {
     background: linear-gradient(135deg, #ffffff 0%, #fbf3e3 100%);
@@ -358,9 +358,6 @@
 
   <!-- ПОИСК -->
   <div class="tab-content active" id="tab-search" role="tabpanel">
-    <div style="margin-bottom: 18px; padding: 12px 16px; background: rgba(229,161,0,0.10); border: 1px solid rgba(229,161,0,0.30); border-radius: 14px; font-size: 12px; color: #6e4f00; line-height: 1.5;">
-      ⚠️ Информация ознакомительная, не является индивидуальной инвестиционной рекомендацией. <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); font-weight: 600;">Подробнее</a>
-    </div>
     <h3 class="section-title">Найти компанию-эмитента</h3>
     <div class="moex-search-wrap">
       <input class="input-field moex-input" id="moexSearch" placeholder="Название компании, тикер или ISIN">
@@ -368,6 +365,10 @@
     </div>
     <div class="moex-status" id="moexStatus"></div>
     <div class="moex-results" id="moexResults"></div>
+
+    <div style="margin-top: 32px; padding: 14px 18px; background: rgba(229,161,0,0.08); border: 1px solid rgba(229,161,0,0.24); border-radius: 14px; font-size: 12px; color: #6e4f00; line-height: 1.55;">
+      ⚠️ Информация ознакомительная, не является индивидуальной инвестиционной рекомендацией (ст. 6.1 39-ФЗ). Решения по ценным бумагам — на ответственности пользователя. <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); font-weight: 600;">Подробнее</a>
+    </div>
   </div>
 
   <!-- ПРОФИЛЬ -->
@@ -1015,29 +1016,42 @@ function renderMultipliers(ticker, companyName) {
     return;
   }
 
+  // Если в текущем срезе нет ROE/ROA/маржи — берём из последней годовой записи истории
+  var hist = HISTORY_CACHE[ticker];
+  var lastYear = (hist && hist.length > 0) ? (hist[0].raw || {}) : {};
+  function pick(field) { return (f[field] !== null && f[field] !== undefined) ? f[field] : lastYear[field]; }
+  var p_e = pick('p_e'),
+      p_b = pick('p_b'),
+      p_s = pick('p_s'),
+      roe = pick('roe'),
+      roa = pick('roa'),
+      eb_margin = pick('ebitda_margin'),
+      ev_eb = pick('ev_ebitda'),
+      debt_eb = pick('debt_ebitda');
+
   var html = '';
   html += '<div class="group-title">Оценка</div>';
   html += '<div class="metrics-grid">';
-  html += metricCard('P/E', f.p_e, 'p_e', { hint: 'цена / прибыль' });
-  html += metricCard('P/B', f.p_b, 'p_b', { hint: 'цена / капитал' });
-  if (f.p_s !== undefined) html += metricCard('P/S', f.p_s, 'p_s', { hint: 'цена / выручка' });
-  if (f.ev_ebitda !== undefined) html += metricCard('EV/EBITDA', f.ev_ebitda, 'ev_ebitda', { hint: 'долг + капа / EBITDA' });
+  html += metricCard('P/E', p_e, 'p_e', { hint: 'цена / прибыль' });
+  html += metricCard('P/B', p_b, 'p_b', { hint: 'цена / капитал' });
+  html += metricCard('P/S', p_s, 'p_s', { hint: 'цена / выручка' });
+  html += metricCard('EV/EBITDA', ev_eb, 'ev_ebitda', { hint: 'долг + капа / EBITDA' });
   html += '</div>';
 
   html += '<div class="group-title">Эффективность</div>';
   html += '<div class="metrics-grid">';
-  if (f.roe !== undefined) html += metricCard('ROE', f.roe, 'roe', { format: 'percent', hint: 'рентабельность капитала' });
-  if (f.roa !== undefined) html += metricCard('ROA', f.roa, 'roa', { format: 'percent', hint: 'рентабельность активов' });
-  if (f.ebitda_margin !== undefined) html += metricCard('Маржа EBITDA', f.ebitda_margin, 'ebitda_margin', { format: 'percent', hint: 'EBITDA / выручка' });
-  if (f.net_interest_margin !== undefined) html += metricCard('ЧПМ', f.net_interest_margin, null, { format: 'percent', noZone: true, hint: 'чистая процентная маржа банка' });
+  html += metricCard('ROE', roe, 'roe', { format: 'percent', hint: 'рентабельность капитала' });
+  html += metricCard('ROA', roa, 'roa', { format: 'percent', hint: 'рентабельность активов' });
+  html += metricCard('Маржа EBITDA', eb_margin, 'ebitda_margin', { format: 'percent', hint: 'EBITDA / выручка' });
+  if (f.net_interest_margin !== undefined && f.net_interest_margin !== null) {
+    html += metricCard('ЧПМ', f.net_interest_margin, null, { format: 'percent', tile: 'indigo', hint: 'чистая процентная маржа банка' });
+  }
   html += '</div>';
 
-  if (f.debt_ebitda !== undefined && f.debt_ebitda !== null) {
-    html += '<div class="group-title">Долг</div>';
-    html += '<div class="metrics-grid">';
-    html += metricCard('Долг / EBITDA', f.debt_ebitda, 'debt_ebitda', { hint: 'чистый долг к EBITDA' });
-    html += '</div>';
-  }
+  html += '<div class="group-title">Долг</div>';
+  html += '<div class="metrics-grid">';
+  html += metricCard('Долг / EBITDA', debt_eb, 'debt_ebitda', { hint: 'чистый долг к EBITDA' });
+  html += '</div>';
 
   // История по годам
   var hist = HISTORY_CACHE[ticker];
