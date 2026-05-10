@@ -169,9 +169,19 @@
   .tile-link:hover { box-shadow: 0 4px 12px rgba(59,63,191,0.10); transform: translateY(-1px); }
 
   .tile-indigo { background: linear-gradient(135deg, rgba(59,63,191,0.10) 0%, rgba(59,63,191,0.04) 100%); border-color: rgba(59,63,191,0.18); }
-  .tile-warm   { background: linear-gradient(135deg, rgba(229,161,0,0.12) 0%, rgba(229,161,0,0.04) 100%); border-color: rgba(229,161,0,0.22); }
-  .tile-mint   { background: linear-gradient(135deg, rgba(46,139,87,0.10) 0%, rgba(46,139,87,0.03) 100%); border-color: rgba(46,139,87,0.20); }
-  .tile-rose   { background: linear-gradient(135deg, rgba(192,57,43,0.07) 0%, rgba(192,57,43,0.02) 100%); border-color: rgba(192,57,43,0.16); }
+  .tile-warm   { background: linear-gradient(135deg, rgba(229,161,0,0.14) 0%, rgba(229,161,0,0.05) 100%); border-color: rgba(229,161,0,0.30); }
+  .tile-mint   {
+    background: linear-gradient(135deg, rgba(46,139,87,0.22) 0%, rgba(46,139,87,0.08) 100%);
+    border-color: rgba(46,139,87,0.45); border-width: 1.5px;
+  }
+  .tile-mint   .tile-label { color: #1f6e44; }
+  .tile-mint   .tile-value { color: #1a5638; }
+  .tile-rose   {
+    background: linear-gradient(135deg, rgba(192,57,43,0.18) 0%, rgba(192,57,43,0.05) 100%);
+    border-color: rgba(192,57,43,0.45); border-width: 1.5px;
+  }
+  .tile-rose   .tile-label { color: #8a2920; }
+  .tile-rose   .tile-value { color: #6b2018; }
   .tile-cream  { background: linear-gradient(135deg, #fbf6ed 0%, #f5f0e8 100%); border-color: var(--border); }
 
   .tile-hero {
@@ -395,7 +405,7 @@
   </div>
 
   <div class="footer">
-    Академия «Инвестиции просто» · Фундаменталка v0.11 · MOEX ISS + Supabase
+    Академия «Инвестиции просто» · Фундаменталка v0.12 · MOEX ISS + Supabase
   </div>
 </div>
 
