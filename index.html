@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Фундаменталка — Инвестиции просто</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://iss.moex.com https://hlpfobpuwvoiuxdvhczb.supabase.co; frame-ancestors https://web.telegram.org https://t.me 'self'; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://iss.moex.com https://hlpfobpuwvoiuxdvhczb.supabase.co; frame-ancestors https://web.telegram.org https://t.me 'self'; base-uri 'self'; form-action 'none'; worker-src blob:;">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="rating" content="general">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Локально: investprosto-design.css. В проде заменить на:
      https://buneginatati.github.io/design-system/investprosto-design.css -->
@@ -410,6 +411,19 @@
           <div class="tile-label">Капитализация</div>
           <div class="tile-value" id="prof-cap">—</div>
           <div class="tile-sub" id="prof-cap-sub"></div>
+        </div>
+
+        <!-- Экспорт в Excel -->
+        <div class="tile tile-link bento-wide" id="prof-export-tile" onclick="exportCompanyToExcel()" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div>
+            <div class="tile-label">📥 Скачать в Excel</div>
+            <div style="font-size: 13px; color: var(--dark); margin-top: 4px; line-height: 1.5;">
+              Сохрани все данные компании одним файлом: профиль, мультипликаторы, история, дивиденды. Для офлайн-анализа и сравнения.
+            </div>
+          </div>
+          <div style="background: var(--green); color: var(--white); padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; white-space: nowrap;">
+            Скачать .xlsx
+          </div>
         </div>
 
         <!-- О компании (на всю ширину) -->
@@ -1638,6 +1652,121 @@ function renderCalendar(ticker, companyName) {
 
   html += '<div class="metrics-source">Источник: ' + escHtml(DIVS_META.source || 'dohod.ru') + '</div>';
   el.innerHTML = html;
+}
+
+function exportCompanyToExcel() {
+  if (!currentCompany || !currentCompany.primaryTicker) {
+    alert('Сначала выбери компанию во вкладке «Поиск».');
+    return;
+  }
+  if (typeof XLSX === 'undefined') {
+    alert('Библиотека XLSX ещё не загрузилась. Попробуй секунду.');
+    return;
+  }
+
+  var ticker = currentCompany.primaryTicker;
+  var name = currentCompany.emitent_title || ticker;
+  var f = (FUND || {})[ticker];
+  var d = (DIVS_DATA || {})[ticker];
+  var hist = HISTORY_CACHE[ticker];
+
+  var wb = XLSX.utils.book_new();
+
+  // Лист 1: Профиль
+  var profile = [
+    ['Параметр', 'Значение'],
+    ['Компания', name],
+    ['ИНН', currentCompany.emitent_inn || ''],
+    ['ОКПО', currentCompany.emitent_okpo || ''],
+    ['Тикеры', (currentCompany.sharesData || []).map(function(s) { return s.secid; }).join(', ')],
+    ['Совокупная капитализация (₽)', currentCompany.totalCap || ''],
+    ['Уровень листинга', currentCompany.primaryListLevel || ''],
+    ['Источник данных', 'MOEX ISS API · smart-lab.ru · dohod.ru · ' + new Date().toISOString().slice(0, 10)],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(profile), 'Профиль');
+
+  // Лист 2: Мультипликаторы
+  if (f) {
+    var multipliers = [
+      ['Метрика', 'Значение', 'Группа'],
+      ['P/E', f.p_e, 'Оценка'],
+      ['P/B', f.p_b, 'Оценка'],
+      ['P/S', f.p_s, 'Оценка'],
+      ['EV/EBITDA', f.ev_ebitda, 'Оценка'],
+      ['ROE, %', f.roe, 'Эффективность'],
+      ['ROA, %', f.roa, 'Эффективность'],
+      ['Маржа EBITDA, %', f.ebitda_margin, 'Эффективность'],
+      ['ЧПМ, % (банки)', f.net_interest_margin, 'Эффективность'],
+      ['Долг / EBITDA', f.debt_ebitda, 'Долг'],
+      ['Капитализация, млрд ₽', f.cap_bn_rub, 'Финансы'],
+      ['EV, млрд ₽', f.ev_bn_rub, 'Финансы'],
+      ['Выручка, млрд ₽', f.revenue, 'Финансы'],
+      ['Чистая прибыль, млрд ₽', f.net_profit, 'Финансы'],
+      ['Чистый опер. доход, млрд ₽ (банки)', f.net_op_income, 'Финансы'],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(multipliers), 'Мультипликаторы');
+  }
+
+  // Лист 3: История мультипликаторов
+  if (hist && hist.length > 0) {
+    var historyRows = [['Год', 'P/E', 'P/B', 'P/S', 'ROE, %', 'ROA, %', 'EV/EBITDA', 'Чистая прибыль, млрд ₽', 'Капитал, млрд ₽', 'Выручка, млрд ₽', 'EPS, ₽']];
+    hist.forEach(function(r) {
+      var raw = r.raw || {};
+      var year = (r.period_label || '').match(/(\d{4})/);
+      year = year ? Number(year[1]) : '';
+      historyRows.push([
+        year, raw.p_e || '', raw.p_b || '', raw.p_s || '',
+        raw.roe || '', raw.roa || '', raw.ev_ebitda || '',
+        r.net_profit || '', raw.capital || '', r.revenue || '', raw.eps || ''
+      ]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(historyRows), 'История по годам');
+  }
+
+  // Лист 4: Дивиденды
+  if (d) {
+    var divRows = [['Тип', 'Период', 'Дата отсечки', 'Сумма, ₽', 'Доходность, %']];
+    if (d.ttm_amount) divRows.push(['TTM (12 мес.)', '', '', d.ttm_amount, d.ttm_yield || '']);
+    if (d.forecast) {
+      divRows.push([
+        'Прогноз',
+        d.forecast.period || '',
+        d.forecast.ex_date || '',
+        d.forecast.amount || '',
+        d.forecast.yield || ''
+      ]);
+    }
+    if (d.dsi !== null && d.dsi !== undefined) divRows.push(['DSI (стабильность 0-1)', '', '', d.dsi, '']);
+    if (d.history && d.history.length > 0) {
+      divRows.push([]);
+      divRows.push(['Выплаченные дивиденды', '', '', '', '']);
+      d.history.forEach(function(p) {
+        divRows.push(['Выплата', p.period || '', p.ex_date || '', p.amount || '', p.yield || '']);
+      });
+    }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(divRows), 'Дивиденды');
+  }
+
+  // Лист 5: Дисклеймер
+  var disclaimer = [
+    ['Информация ознакомительная'],
+    ['Данные приложения «Фундаменталка» не являются индивидуальной инвестиционной рекомендацией'],
+    ['в смысле ст. 6.1 Федерального закона «О рынке ценных бумаг» от 22.04.1996 № 39-ФЗ.'],
+    ['Прошлые результаты не гарантируют будущей доходности.'],
+    ['Решения о покупке/продаже ценных бумаг — на ответственности пользователя.'],
+    [],
+    ['Источники данных:'],
+    ['  MOEX ISS API — биржевые данные'],
+    ['  smart-lab.ru — мультипликаторы и история'],
+    ['  dohod.ru — текущая дивидендная доходность и прогнозы'],
+    ['  DeepSeek API — описания компаний'],
+    [],
+    ['Академия «Инвестиции просто» · ' + new Date().toISOString().slice(0, 10)],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(disclaimer), 'Дисклеймер');
+
+  var filename = 'fundamentalka-' + ticker + '-' + new Date().toISOString().slice(0, 10) + '.xlsx';
+  XLSX.writeFile(wb, filename);
 }
 
 async function loadPriceChange(ticker, currentPrice) {
