@@ -523,7 +523,7 @@
   </div>
 
   <div class="footer" style="text-align: center; padding: 18px 20px; font-size: 11px; line-height: 1.6; color: var(--muted);">
-    16+ · Информация ознакомительная, не является ИИР · Источники: MOEX, smart-lab, dohod · Академия «Инвестиции просто» · v2.0 ·
+    16+ · Информация ознакомительная, не является ИИР · Академия «Инвестиции просто» · v2.0 ·
     <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none; font-weight: 600;">подробнее →</a>
   </div>
 </div>
@@ -1026,7 +1026,7 @@ function renderMultipliers(ticker, companyName) {
   var f = FUND[ticker];
   if (!f) {
     el.innerHTML = '<div class="stub-block"><b>📊 По «' + escHtml(companyName || ticker) + '» цифр пока нет</b>'
-      + 'Источник (smart-lab) этого эмитента сейчас не покрывает. Когда твой Supabase подцепится — данные появятся.</div>';
+      + 'Финансовых показателей по этому эмитенту в нашей базе ещё нет. Снимки обновляются автоматически по понедельникам.</div>';
     return;
   }
 
@@ -1238,8 +1238,8 @@ function renderDividends(ticker, companyName) {
   });
 
   if (!anyData) {
-    el.innerHTML = '<div class="stub-block"><b>💰 По «' + escHtml(companyName || ticker) + '» дивидендных цифр в источнике нет</b>'
-      + 'Возможно, компания их не платит или просто не в покрытии источника. Проверь напрямую на dohod.ru.</div>';
+    el.innerHTML = '<div class="stub-block"><b>💰 По «' + escHtml(companyName || ticker) + '» данных о дивидендах нет</b>'
+      + 'Возможно, компания их не платит или ещё не попала в нашу базу. Проверить можно на странице раскрытия информации эмитента.</div>';
     return;
   }
 
@@ -1615,8 +1615,8 @@ function renderCalendar(ticker, companyName) {
 
   if (events.length === 0) {
     el.innerHTML = '<div class="stub-block"><b>📅 Ближайших дивидендных событий нет</b>'
-      + 'По «' + escHtml(companyName || ticker) + '» в источнике (dohod.ru) нет анонсированных будущих выплат.<br><br>'
-      + 'Календарь отчётов МСФО и ГОСА — добавлю позже, когда найду стабильный источник без anti-bot защиты.</div>';
+      + 'По «' + escHtml(companyName || ticker) + '» сейчас нет анонсированных будущих выплат.<br><br>'
+      + 'Календарь отчётов МСФО и ГОСА появится в следующих версиях.</div>';
     return;
   }
 
@@ -1667,7 +1667,7 @@ function exportCompanyToExcel() {
     ['Тикеры', (currentCompany.sharesData || []).map(function(s) { return s.secid; }).join(', ')],
     ['Совокупная капитализация (₽)', currentCompany.totalCap || ''],
     ['Уровень листинга', currentCompany.primaryListLevel || ''],
-    ['Источник данных', 'MOEX ISS API · smart-lab.ru · dohod.ru · ' + new Date().toISOString().slice(0, 10)],
+    ['Дата выгрузки', new Date().toISOString().slice(0, 10)],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(profile), 'Профиль');
 
@@ -1741,11 +1741,8 @@ function exportCompanyToExcel() {
     ['Прошлые результаты не гарантируют будущей доходности.'],
     ['Решения о покупке/продаже ценных бумаг — на ответственности пользователя.'],
     [],
-    ['Источники данных:'],
-    ['  MOEX ISS API — биржевые данные'],
-    ['  smart-lab.ru — мультипликаторы и история'],
-    ['  dohod.ru — текущая дивидендная доходность и прогнозы'],
-    ['  DeepSeek API — описания компаний'],
+    ['Полный перечень источников и условия использования — на странице «Условия и политика данных»'],
+    ['Академии «Инвестиции просто».'],
     [],
     ['Академия «Инвестиции просто» · ' + new Date().toISOString().slice(0, 10)],
   ];
