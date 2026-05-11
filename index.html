@@ -1095,12 +1095,6 @@ function renderMultipliers(ticker, companyName) {
     html += '</tbody></table>';
   }
 
-  html += '<div class="metrics-source">'
-    + 'Источник: ' + escHtml(FUND_META.source || '—')
-    + (FUND_META.updated ? ' · Снимок от ' + escHtml(FUND_META.updated) : '')
-    + '. Обновляется автоматически по понедельникам.'
-    + '</div>';
-
   el.innerHTML = html;
 }
 
@@ -1127,7 +1121,6 @@ function renderFinancials(ticker, companyName) {
   }
   html += metricCard('Чистая прибыль', f.net_profit, null, { format: 'bnrub', tile: 'rose' });
   html += '</div>';
-  html += '<div class="metrics-source">Источник: ' + escHtml(FUND_META.source) + ' · ' + escHtml(FUND_META.updated) + '</div>';
   el.innerHTML = html;
 }
 
@@ -1259,7 +1252,6 @@ function renderDividends(ticker, companyName) {
     html += '</div>';
   }
 
-  html += '<div class="metrics-source">Источник: ' + escHtml(DIVS_META.source) + ' · снимок от ' + escHtml(DIVS_META.updated) + '</div>';
   el.innerHTML = html;
 }
 
@@ -1645,12 +1637,6 @@ function renderCalendar(ticker, companyName) {
   });
   html += '</tbody></table>';
 
-  html += '<div class="stub-block" style="margin-top: 18px;">'
-    + '<b>📋 Скоро добавлю</b>'
-    + 'Даты публикации МСФО-отчётов, заседаний СД, ГОСА. Источник пока ищется — основные смартлаб/e-disclosure требуют JS-рендера.'
-    + '</div>';
-
-  html += '<div class="metrics-source">Источник: ' + escHtml(DIVS_META.source || 'dohod.ru') + '</div>';
   el.innerHTML = html;
 }
 
