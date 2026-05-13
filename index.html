@@ -10,385 +10,229 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Локально: investprosto-design.css. В проде заменить на:
-     https://buneginatati.github.io/design-system/investprosto-design.css -->
+<!-- Шрифты подгружаются внутри investprosto-design.css (Onest + JetBrains Mono) -->
 <link rel="stylesheet" href="investprosto-design.css">
 <style>
-  /* Локальные дополнения, специфичные только для Фундаменталки */
-  .stub-block {
-    padding: 28px 24px;
-    border: 1.5px dashed var(--green-border-strong);
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(59,63,191,0.08) 0%, rgba(59,63,191,0.03) 100%);
-    text-align: center;
-    color: var(--green);
-    font-size: 13px;
-    line-height: 1.6;
-  }
-  .stub-block b { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
-  .stub-block .stub-todo { color: var(--muted); font-size: 11px; margin-top: 12px; font-weight: 500; }
-
-  .profile-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
-  .profile-row {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 12px 14px; background: var(--bg-card);
-    border: 1px solid var(--border); border-radius: 10px;
-  }
-  .profile-label {
-    font-size: 11px; color: var(--muted); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-  .profile-value { font-size: 15px; font-weight: 700; color: var(--black); text-align: right; }
-
-  .ticker-pill {
-    display: inline-block; padding: 4px 12px; border-radius: 999px;
-    background: var(--green); color: var(--white);
-    font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
-  }
-  .nav-back-link {
-    display: inline-block; padding: 10px 16px; margin-bottom: 14px;
-    background: transparent; border: 1.5px solid var(--green-border-strong);
-    border-radius: 8px; color: var(--green); font-size: 12px;
-    font-weight: 700; cursor: pointer; text-decoration: none;
-  }
-
-  .empty-state {
-    padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;
-  }
-
-  /* COMPARE */
-  .cmp-slot {
-    padding: 18px 20px; border-radius: 20px; background: var(--bg-card);
-    border: 1.5px solid var(--border); margin-bottom: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  }
-  .cmp-slot-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px;
-  }
-  .cmp-slot-title {
-    font-size: 11px; color: var(--muted); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-  .cmp-slot-loaded { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .cmp-slot-name { font-size: 14px; font-weight: 700; color: var(--black); }
-  .cmp-slot-ticker { font-size: 11px; color: var(--green); font-weight: 700; }
-  .cmp-slot-search {
-    display: flex; gap: 8px;
-  }
-  .cmp-slot-search input {
-    flex: 1; padding: 10px 12px; background: var(--bg-card);
-    border: 1.5px solid var(--border); border-radius: 8px;
-    color: var(--black); font-size: 14px; font-weight: 500; outline: none; font-family: inherit;
-  }
-  .cmp-slot-search input:focus { border-color: var(--green); }
-  .cmp-slot-search button {
-    padding: 10px 16px; background: var(--green); color: var(--white);
-    border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
-    cursor: pointer; font-family: inherit;
-  }
-
-  .cmp-slot-status { font-size: 11px; color: var(--muted); margin-top: 6px; min-height: 14px; }
-  .cmp-slot-status.error { color: var(--red); }
-  .cmp-slot-results { margin-top: 8px; max-height: 200px; overflow-y: auto; }
-
-  .cmp-table {
-    width: 100%; border-collapse: collapse; font-size: 13px;
-    background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  }
-  .cmp-table th, .cmp-table td {
-    padding: 10px 12px; border-bottom: 1px solid var(--border);
-    text-align: left; vertical-align: middle;
-  }
-  .cmp-table thead th {
-    font-size: 10px; color: var(--muted); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.6px;
-    background: var(--green-bg);
-  }
-  .cmp-table tbody tr:last-child td { border-bottom: none; }
-  .cmp-table .cmp-metric { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .cmp-table .cmp-value { font-weight: 700; color: var(--black); }
-  .cmp-table .cmp-value.best { color: var(--score-green); }
-  .cmp-table .cmp-value.worst { color: var(--muted); }
-  .cmp-emoji { margin-right: 4px; }
-
-  /* Override design-system .moex-item под плиточный стиль */
-  .moex-item {
-    border-radius: 16px;
-    padding: 14px 18px;
-    border: 1.5px solid var(--border);
-    background: var(--bg-card);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .moex-show-all-btn {
-    border-radius: 16px;
-  }
-
-  /* MULTIPLIERS / FINANCIALS / DIVIDENDS — плиточный стиль */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px; margin-bottom: 18px;
-  }
-  .metric-card {
-    padding: 18px 20px; border-radius: 20px;
-    background: var(--bg-card);
-    border: 1.5px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  }
-  .metric-card.zone-green  {
-    background: linear-gradient(135deg, rgba(46,139,87,0.18) 0%, rgba(46,139,87,0.05) 100%);
-    border-color: rgba(46,139,87,0.40);
-  }
-  .metric-card.zone-yellow {
-    background: linear-gradient(135deg, rgba(212,154,0,0.18) 0%, rgba(212,154,0,0.05) 100%);
-    border-color: rgba(212,154,0,0.40);
-  }
-  .metric-card.zone-red    {
-    background: linear-gradient(135deg, rgba(192,57,43,0.10) 0%, rgba(192,57,43,0.03) 100%);
-    border-color: rgba(192,57,43,0.28);
-  }
-  .metric-card.zone-na     {
-    background: linear-gradient(135deg, #ffffff 0%, #fbf3e3 100%);
-    border-color: rgba(180,160,130,0.42);
-    border-width: 1.5px;
-  }
-  .metric-card.zone-na .metric-label { color: #7a5d3a; }
-  .metric-card.zone-na .metric-value { color: #5a431f; }
-
-  /* Цветовые акценты для metric-card вне зональной логики (Финансы и т.п.) */
-  .metric-card.accent-indigo {
-    background: linear-gradient(135deg, rgba(59,63,191,0.13) 0%, rgba(59,63,191,0.04) 100%);
-    border-color: rgba(59,63,191,0.30);
-  }
-  .metric-card.accent-indigo .metric-label { color: #2D2F6B; }
-  .metric-card.accent-indigo .metric-value { color: #2D2F6B; }
-  .metric-card.accent-warm {
-    background: linear-gradient(135deg, rgba(229,161,0,0.16) 0%, rgba(229,161,0,0.05) 100%);
-    border-color: rgba(229,161,0,0.35);
-  }
-  .metric-card.accent-warm .metric-label { color: #8a6300; }
-  .metric-card.accent-warm .metric-value { color: #5e4400; }
-  .metric-card.accent-mint {
-    background: linear-gradient(135deg, rgba(46,139,87,0.20) 0%, rgba(46,139,87,0.06) 100%);
-    border-color: rgba(46,139,87,0.42);
-  }
-  .metric-card.accent-mint .metric-label { color: #1f6e44; }
-  .metric-card.accent-mint .metric-value { color: #1a5638; }
-  .metric-card.accent-rose {
-    background: linear-gradient(135deg, rgba(192,57,43,0.16) 0%, rgba(192,57,43,0.05) 100%);
-    border-color: rgba(192,57,43,0.40);
-  }
-  .metric-card.accent-rose .metric-label { color: #8a2920; }
-  .metric-card.accent-rose .metric-value { color: #6b2018; }
-
-  .metric-label {
-    font-size: 11px; color: var(--muted); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px;
-  }
-  .metric-value { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -0.3px; line-height: 1.15; }
-  .metric-card.zone-green  .metric-label { color: #1f6e44; }
-  .metric-card.zone-green  .metric-value { color: #1a5638; }
-  .metric-card.zone-yellow .metric-label { color: #7a5800; }
-  .metric-card.zone-yellow .metric-value { color: #5e4400; }
-  .metric-card.zone-red    .metric-label { color: #8a2920; }
-  .metric-card.zone-red    .metric-value { color: #6b2018; }
-  .metric-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
-  .metric-na .metric-value { color: var(--muted); font-size: 18px; }
-  .metrics-source {
-    margin-top: 18px; padding: 14px 18px; font-size: 11px; color: var(--muted);
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; line-height: 1.5;
-  }
-  .group-title {
-    font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1.5px;
-    text-transform: uppercase; margin: 22px 0 12px;
-  }
-  .group-title:first-child { margin-top: 0; }
-
-  /* BENTO TILES (фирменный плиточный layout, 6-колоночная сетка) */
-  .bento {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .bento-wide { grid-column: span 6; }    /* full width */
-  .bento-half { grid-column: span 3; }    /* 1/2 — пара в строке */
-  .bento-third { grid-column: span 2; }   /* 1/3 — тройка в строке */
-  @media (max-width: 600px) {
-    .bento { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .bento-wide { grid-column: span 2; }
-    .bento-half { grid-column: span 2; }   /* на узких — full */
-    .bento-third { grid-column: span 1; }  /* на узких — 2 в строке */
-  }
-
-  .tile {
-    padding: 20px 22px;
-    border-radius: 20px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    position: relative;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-  .tile-link { cursor: pointer; }
-
-
-  .tile-indigo { background: linear-gradient(135deg, rgba(59,63,191,0.10) 0%, rgba(59,63,191,0.04) 100%); border-color: rgba(59,63,191,0.18); }
-  .tile-warm   { background: linear-gradient(135deg, rgba(229,161,0,0.14) 0%, rgba(229,161,0,0.05) 100%); border-color: rgba(229,161,0,0.30); }
-  .tile-mint   {
-    background: linear-gradient(135deg, rgba(46,139,87,0.22) 0%, rgba(46,139,87,0.08) 100%);
-    border-color: rgba(46,139,87,0.45); border-width: 1.5px;
-  }
-  .tile-mint   .tile-label { color: #1f6e44; }
-  .tile-mint   .tile-value { color: #1a5638; }
-  .tile-rose   {
-    background: linear-gradient(135deg, rgba(192,57,43,0.18) 0%, rgba(192,57,43,0.05) 100%);
-    border-color: rgba(192,57,43,0.45); border-width: 1.5px;
-  }
-  .tile-rose   .tile-label { color: #8a2920; }
-  .tile-rose   .tile-value { color: #6b2018; }
-  .tile-cream  {
-    background: linear-gradient(135deg, #ffffff 0%, #fbf3e3 100%);
-    border-color: rgba(180,160,130,0.40); border-width: 1.5px;
-    box-shadow: 0 2px 6px rgba(120,100,80,0.06);
-  }
-  .tile-cream  .tile-label { color: #7a5d3a; }
-  .tile-cream  .tile-value { color: #5a431f; }
-
-  .tile-hero {
-    padding: 28px 26px;
-    background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
-    color: var(--white);
-    border: none;
-  }
-  .tile-hero .tile-label { color: rgba(255,255,255,0.7); }
-  .tile-hero .tile-value { color: var(--white); font-size: 26px; }
-  .tile-hero .tile-sub { color: rgba(255,255,255,0.85); }
-
-  .tile-label {
-    font-size: 11px; font-weight: 700; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.7px;
-    margin-bottom: 10px;
-  }
-  .tile-value {
-    font-size: 22px; font-weight: 800; color: var(--black);
-    letter-spacing: -0.4px; line-height: 1.15;
-  }
-  .tile-value.small { font-size: 16px; }
-  .tile-sub { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
-
-  .tile-up   .tile-sub { color: var(--score-green); font-weight: 700; }
-  .tile-down .tile-sub { color: var(--score-red); font-weight: 700; }
-
-  /* Focus-стили для клавиатурной навигации */
-  .tab:focus-visible,
-  button:focus-visible,
-  .input-field:focus-visible,
-  a:focus-visible {
-    outline: 2px solid var(--green);
-    outline-offset: 2px;
-    border-radius: 6px;
-  }
-
-  /* На мобильных bento-third делаем full-width, чтобы не было «сирот» */
-  @media (max-width: 600px) {
-    .bento-third { grid-column: span 2 !important; }
-  }
-
-  /* PRICE CHART CONTROLS */
-  .chart-period-btn {
-    padding: 6px 12px; border-radius: 8px;
-    border: 1.5px solid var(--green-border-strong);
-    background: transparent; color: var(--green);
-    font-size: 12px; font-weight: 700; cursor: pointer;
-    font-family: inherit; letter-spacing: 0.3px;
-  }
-
-  .chart-period-btn.active { background: var(--green); color: var(--white); border-color: var(--green); }
-  .chart-stat { display: inline-flex; align-items: baseline; gap: 5px; }
-  .chart-stat b { color: var(--black); font-weight: 700; font-size: 13px; }
-  .chart-stat.up b { color: var(--score-green); }
-  .chart-stat.down b { color: var(--score-red); }
-
-  @media (hover: hover) and (pointer: fine) {
-    .nav-back-link:hover { background: var(--green); color: var(--white); }
-    .cmp-slot-search button:hover { background: var(--green-light); }
-    .moex-item:hover {
-        border-color: var(--green-border-strong);
-        background: var(--green-bg);
-        transform: translateY(-1px);
-      }
-    .tile-link:hover { box-shadow: 0 4px 12px rgba(59,63,191,0.10); transform: translateY(-1px); }
-    .chart-period-btn:hover { background: var(--green-bg); }
-  }
+  /* Локальные стили вынесены в investprosto-design.css */
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-logo">
-    <svg viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="18" stroke="#3B3FBF" stroke-width="2"/>
-      <path d="M12 20 L18 26 L28 14" stroke="#3B3FBF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- ════════════ ONBOARDING OVERLAY (показывается при первом визите) ════════════ -->
+<div class="onb-overlay" id="onbOverlay">
+  <div class="onb-inner">
+    <div class="onb-top">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M4 16 L4 4 L16 4 M4 10 L13 10 M10 16 L10 4" stroke="#0E1116" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Фундаменталка</h1>
+          <p>Анализ эмитента · Академия</p>
+        </div>
+      </div>
+      <div class="onb-counter"><span id="onbDone">0</span>/<span id="onbTotal">7</span></div>
+    </div>
+
+    <div class="onb-eyebrow">Стартовый чек-лист</div>
+    <div class="onb-title">Привет!<br>Так не страшно.</div>
+    <p class="onb-lead">Пройди 7 шагов, чтобы освоить базовый фундаментал. Это <b>не курс</b> — просто маршрут по приложению.</p>
+
+    <div class="onb-progress"><div class="pb-fill" id="onbFill" style="width: 0%;"></div></div>
+
+    <div class="onb-steps" id="onbSteps">
+      <div class="onb-step" data-step="search" data-target="search">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Открой Поиск</div>
+          <div class="onb-step-sub">Найди первую компанию</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="profile" data-target="profile">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Посмотри Профиль</div>
+          <div class="onb-step-sub">Кратко: кто, что, сколько</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="zones" data-target="multipliers">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Пойми светофор</div>
+          <div class="onb-step-sub">Зелёный / жёлтый / красный</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="multi" data-target="multipliers">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Прочитай мультипликаторы</div>
+          <div class="onb-step-sub">P/E, P/B, ROE по-простому</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="div" data-target="dividends">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Загляни в дивиденды</div>
+          <div class="onb-step-sub">TTM, DSI, история</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="cmp" data-target="compare">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Сравни две компании</div>
+          <div class="onb-step-sub">Бок о бок · до 3</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="onb-step" data-step="xlsx" data-target="profile">
+        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="onb-step-body">
+          <div class="onb-step-title">Скачай Excel-выгрузку</div>
+          <div class="onb-step-sub">Всё одним файлом</div>
+        </div>
+        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <button class="onb-skip" onclick="closeOnboarding()">Пропустить и начать</button>
+  </div>
+</div>
+
+<!-- ════════════ HEADER ════════════ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">
+      <svg viewBox="0 0 20 20" fill="none">
+        <path d="M4 16 L4 4 L16 4 M4 10 L13 10 M10 16 L10 4" stroke="#0E1116" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Фундаменталка</h1>
+      <p>Анализ эмитента · Академия</p>
+    </div>
+  </div>
+  <button class="header-menu-btn" onclick="openMenu()" aria-label="Меню вкладок">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M5 12 H19 M5 6 H19 M5 18 H19"/>
     </svg>
-  </div>
-  <div>
-    <h1>Фундаменталка</h1>
-    <p>Анализ эмитента · Академия «Инвестиции просто»</p>
-  </div>
+  </button>
+</header>
+
+<!-- ════════════ TOP TABS — скрыты, в DOM для совместимости JS-логики ════════════ -->
+<div class="tabs" role="tablist" aria-label="Разделы">
+  <button class="tab active" data-tab="home"        role="tab" aria-selected="true"  aria-controls="tab-home">Главная</button>
+  <button class="tab"        data-tab="search"      role="tab" aria-selected="false" aria-controls="tab-search">Поиск</button>
+  <button class="tab"        data-tab="profile"     role="tab" aria-selected="false" aria-controls="tab-profile">Профиль</button>
+  <button class="tab"        data-tab="financials"  role="tab" aria-selected="false" aria-controls="tab-financials">Финансы</button>
+  <button class="tab"        data-tab="multipliers" role="tab" aria-selected="false" aria-controls="tab-multipliers">Мульти</button>
+  <button class="tab"        data-tab="dividends"   role="tab" aria-selected="false" aria-controls="tab-dividends">Дивы</button>
+  <button class="tab"        data-tab="insiders"    role="tab" aria-selected="false" aria-controls="tab-insiders" style="display:none;">Инсайдеры</button>
+  <button class="tab"        data-tab="calendar"    role="tab" aria-selected="false" aria-controls="tab-calendar">Календарь</button>
+  <button class="tab"        data-tab="compare"     role="tab" aria-selected="false" aria-controls="tab-compare">Сравнение</button>
 </div>
 
-<div class="tabs" role="tablist" aria-label="Разделы Фундаменталки">
-  <button class="tab active" data-tab="search" role="tab" aria-selected="true" aria-controls="tab-search">Поиск</button>
-  <button class="tab" data-tab="profile" role="tab" aria-selected="false" aria-controls="tab-profile">Профиль</button>
-  <button class="tab" data-tab="financials" role="tab" aria-selected="false" aria-controls="tab-financials">Финансы</button>
-  <button class="tab" data-tab="multipliers" role="tab" aria-selected="false" aria-controls="tab-multipliers">Мультипликаторы</button>
-  <button class="tab" data-tab="dividends" role="tab" aria-selected="false" aria-controls="tab-dividends">Дивиденды</button>
-  <button class="tab" data-tab="insiders" role="tab" aria-selected="false" aria-controls="tab-insiders" style="display:none;">Инсайдеры</button>
-  <button class="tab" data-tab="calendar" role="tab" aria-selected="false" aria-controls="tab-calendar">Календарь</button>
-  <button class="tab" data-tab="compare" role="tab" aria-selected="false" aria-controls="tab-compare">Сравнение</button>
-</div>
-
+<!-- ════════════ CONTENT ════════════ -->
 <div class="content">
 
-  <!-- ПОИСК -->
-  <div class="tab-content active" id="tab-search" role="tabpanel">
-    <h3 class="section-title">Найти компанию-эмитента</h3>
+  <!-- ──────── ГЛАВНАЯ (новая, точка входа) ──────── -->
+  <div class="tab-content active" id="tab-home" role="tabpanel">
+    <div id="home-recent" style="padding: 0 14px 14px;"></div>
+    <div class="bento">
+      <div class="tile tile-hero span-full tile-large" onclick="switchTab('search')" style="cursor: pointer;">
+        <div>
+          <div class="tile-label">Старт</div>
+          <div class="tile-value large">Найти<br>компанию</div>
+        </div>
+        <div>
+          <span class="ticker-pill" style="background: rgba(14,17,22,0.12); color: #0E1116;">SBER · GAZP · LKOH · YDEX</span>
+        </div>
+      </div>
+      <div class="tile" onclick="switchTab('profile')" style="cursor: pointer;">
+        <div class="tile-label">Карточка</div>
+        <div class="tile-value">Профиль</div>
+      </div>
+      <div class="tile tile-cream" onclick="switchTab('financials')" style="cursor: pointer;">
+        <div class="tile-label">₽</div>
+        <div class="tile-value">Финансы</div>
+      </div>
+      <div class="tile tile-lav span-full tile-large" onclick="switchTab('multipliers')" style="cursor: pointer;">
+        <div>
+          <div class="tile-label">Учебная вкладка</div>
+          <div class="tile-value large">Мульти-<br>пликаторы</div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="zone zone-green"><span class="zone-glyph">▲</span>P/E</span>
+          <span class="zone zone-amber"><span class="zone-glyph">◆</span>P/B</span>
+          <span class="zone zone-red"><span class="zone-glyph">▼</span>Долг</span>
+        </div>
+      </div>
+      <div class="tile tile-mint" onclick="switchTab('dividends')" style="cursor: pointer;">
+        <div class="tile-label">% TTM</div>
+        <div class="tile-value">Дивиденды</div>
+      </div>
+      <div class="tile tile-orange" onclick="switchTab('calendar')" style="cursor: pointer;">
+        <div class="tile-label">Отсечки</div>
+        <div class="tile-value">Календарь</div>
+      </div>
+      <div class="tile span-full" onclick="switchTab('compare')" style="cursor: pointer;">
+        <div class="tile-label">До 3 компаний</div>
+        <div class="tile-value">Сравнение<br>бок о бок</div>
+      </div>
+    </div>
+    <div class="disclaimer-banner">
+      <span class="badge-age">!</span>
+      <div>Информация ознакомительная, <b>не является ИИР</b> (ст. 6.1 39-ФЗ). Решения по бумагам — на ответственности пользователя. <a href="legal.html" target="_blank" rel="noopener noreferrer">Подробнее</a></div>
+    </div>
+  </div>
+
+  <!-- ──────── ПОИСК ──────── -->
+  <div class="tab-content" id="tab-search" role="tabpanel">
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Поиск</div>
+        <div class="screen-header-title">Найти компанию</div>
+      </div>
+    </div>
     <div class="moex-search-wrap">
       <input class="input-field moex-input" id="moexSearch" placeholder="Название компании, тикер или ISIN">
       <button class="moex-search-btn" id="moexSearchBtn">Найти</button>
     </div>
     <div class="moex-status" id="moexStatus"></div>
     <div class="moex-results" id="moexResults"></div>
-
-    <div style="margin-top: 32px; padding: 14px 18px; background: rgba(229,161,0,0.08); border: 1px solid rgba(229,161,0,0.24); border-radius: 14px; font-size: 12px; color: #6e4f00; line-height: 1.55;">
-      ⚠️ Информация ознакомительная, не является индивидуальной инвестиционной рекомендацией (ст. 6.1 39-ФЗ). Решения по ценным бумагам — на ответственности пользователя. <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); font-weight: 600;">Подробнее</a>
+    <div class="disclaimer-banner" style="margin-top: 18px;">
+      <span class="badge-age">16+</span>
+      <div>Информация ознакомительная, <b>не является ИИР</b> (ст. 6.1 39-ФЗ). Решения по ценным бумагам — на ответственности пользователя. <a href="legal.html" target="_blank" rel="noopener noreferrer">Подробнее →</a></div>
     </div>
   </div>
 
-  <!-- ПРОФИЛЬ -->
+  <!-- ──────── ПРОФИЛЬ ──────── -->
   <div class="tab-content" id="tab-profile">
+    <div class="chip-strip"><button class="chip active" data-tab="profile">Профиль</button><button class="chip" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
     <div id="profile-empty" class="empty-state">
+      <div class="es-glyph">🔍</div>
       Сначала выбери компанию во вкладке «Поиск».
     </div>
     <div id="profile-loaded" style="display:none;">
-      <div class="bento">
-
-        <!-- Hero: название компании -->
-        <div class="tile tile-hero bento-wide">
-          <div class="tile-label">Компания</div>
-          <div class="tile-value" id="prof-name">—</div>
-          <div class="tile-sub" id="prof-sector"></div>
+      <div class="breadcrumb">
+        <span class="crumb-back" onclick="switchTab('search')">← Поиск</span>
+      </div>
+      <div class="screen-header">
+        <div>
+          <div class="screen-header-sub" id="prof-sector">Профиль</div>
+          <div class="screen-header-title" id="prof-name">—</div>
         </div>
+      </div>
 
-        <!-- Малые плитки в одной строке: Листинг | ИНН | Тикеры -->
-        <div class="tile tile-rose bento-third">
+      <div class="bento">
+        <!-- Малые плитки: Листинг | ИНН | Тикеры -->
+        <div class="tile tile-lav bento-third">
           <div class="tile-label">Листинг</div>
           <div class="tile-value small" id="prof-listing">—</div>
         </div>
@@ -401,8 +245,8 @@
           <div class="tile-value small" id="prof-tickers">—</div>
         </div>
 
-        <!-- Большие плитки 50/50: Цена + Капитализация -->
-        <div class="tile tile-warm bento-half" id="prof-price-tile" style="display:none;">
+        <!-- Цена + Капа -->
+        <div class="tile tile-cream bento-half" id="prof-price-tile" style="display:none;">
           <div class="tile-label">Цена · <span id="prof-price-ticker">—</span></div>
           <div class="tile-value" id="prof-price">—</div>
           <div class="tile-sub" id="prof-price-change">—</div>
@@ -413,128 +257,303 @@
           <div class="tile-sub" id="prof-cap-sub"></div>
         </div>
 
-        <!-- Экспорт в Excel -->
-        <div class="tile tile-link bento-wide" id="prof-export-tile" onclick="exportCompanyToExcel()" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-          <div>
+        <!-- Excel -->
+        <div class="tile tile-link span-full" id="prof-export-tile" onclick="exportCompanyToExcel()" style="cursor: pointer; flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; min-height: auto;">
+          <div style="flex: 1; min-width: 0;">
             <div class="tile-label">📥 Скачать в Excel</div>
-            <div style="font-size: 13px; color: var(--dark); margin-top: 4px; line-height: 1.5;">
-              Сохрани все данные компании одним файлом: профиль, мультипликаторы, история, дивиденды. Для офлайн-анализа и сравнения.
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.5;">
+              Всё одним файлом: профиль, мультипликаторы, история, дивиденды.
             </div>
           </div>
-          <div style="background: var(--green); color: var(--white); padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; white-space: nowrap;">
-            Скачать .xlsx
-          </div>
+          <div class="btn-primary" style="white-space: nowrap;">.xlsx</div>
         </div>
 
-        <!-- О компании (на всю ширину) -->
-        <div class="tile bento-wide" id="prof-description-block" style="display:none;">
-          <div class="tile-label">О компании</div>
-          <div id="prof-description" style="font-size: 14px; line-height: 1.65; color: var(--dark); margin-top: 4px;"></div>
-          <div style="margin-top: 12px; font-size: 11px; color: var(--muted); font-style: italic;">
-            Описание сгенерировано ИИ по открытым данным — для образовательных целей. Перед принятием решений сверяйтесь с официальными источниками.
+        <!-- О компании -->
+        <div class="surface span-full" id="prof-description-block" style="display:none;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom: 8px;">
+            <span class="tile-label">О компании</span>
+            <span class="ai-badge" title="Текст сгенерирован ИИ по открытым данным. Перед принятием решений сверяйтесь с официальными источниками."
+                  onclick="showHint('Описание сгенерировано ИИ по открытым данным — для образовательных целей. Перед принятием решений сверяйтесь с официальными источниками.')"
+                  style="cursor:pointer;">✦&nbsp;AI</span>
           </div>
+          <div id="prof-description" style="font-size: 14px; line-height: 1.55; color: var(--text); text-wrap: pretty;"></div>
         </div>
 
-        <!-- График цены (на всю ширину) -->
-        <div class="tile bento-wide" id="prof-chart-block" style="display:none;">
-          <div class="tile-label" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
-            <span>Динамика цены</span>
-            <span id="prof-chart-controls" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
+        <!-- График -->
+        <div class="chart-card span-full" id="prof-chart-block" style="display:none; margin: 0;">
+          <div class="chart-card-head">
+            <span class="chart-title">Динамика цены</span>
+            <span class="chart-periods" id="prof-chart-controls"></span>
           </div>
-          <div class="chart-wrap" style="height:240px; position: relative;">
+          <div class="chart-wrap" style="height: 200px;">
             <canvas id="priceChart"></canvas>
           </div>
-          <div id="prof-chart-stats" style="margin-top:14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;"></div>
+          <div class="chart-stats" id="prof-chart-stats"></div>
         </div>
 
-        <!-- Акции компании (на всю ширину) -->
-        <div class="tile bento-wide" id="prof-shares-block" style="display:none;">
-          <div class="tile-label">Акции компании</div>
-          <div id="prof-shares-list" style="margin-top: 6px;"></div>
+        <!-- Акции -->
+        <div class="surface span-full" id="prof-shares-block" style="display:none;">
+          <div class="tile-label" style="margin-bottom: 10px;">Акции компании</div>
+          <div id="prof-shares-list"></div>
         </div>
 
-        <!-- Облигационные выпуски (на всю ширину) -->
-        <div class="tile bento-wide" id="prof-bonds-block" style="display:none;">
-          <div class="tile-label">Облигационные выпуски</div>
-          <div id="prof-bonds-list" style="margin-top: 6px;"></div>
+        <!-- Облигации -->
+        <div class="surface span-full" id="prof-bonds-block" style="display:none;">
+          <div class="tile-label" style="margin-bottom: 10px;">Облигационные выпуски</div>
+          <div id="prof-bonds-list"></div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ФИНАНСЫ -->
+  <!-- ──────── ФИНАНСЫ ──────── -->
   <div class="tab-content" id="tab-financials">
-    <h3 class="section-title">Финансовые показатели</h3>
+    <div class="chip-strip"><button class="chip" data-tab="profile">Профиль</button><button class="chip active" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
+    <div class="breadcrumb"><span class="crumb-back" onclick="switchTab('profile')">← Профиль</span></div>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Финансы</div>
+        <div class="screen-header-title">Базовые показатели</div>
+      </div>
+    </div>
     <div id="financials-content">
-      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
+      <div class="empty-state">
+        <div class="es-glyph">📊</div>
+        Сначала выбери компанию во вкладке «Поиск».
+      </div>
     </div>
   </div>
 
-  <!-- МУЛЬТИПЛИКАТОРЫ -->
+  <!-- ──────── МУЛЬТИПЛИКАТОРЫ ──────── -->
   <div class="tab-content" id="tab-multipliers">
-    <h3 class="section-title">Мультипликаторы</h3>
+    <div class="chip-strip"><button class="chip" data-tab="profile">Профиль</button><button class="chip" data-tab="financials">Финансы</button><button class="chip active" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
+    <div class="breadcrumb"><span class="crumb-back" onclick="switchTab('profile')">← Профиль</span></div>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Мультипликаторы</div>
+        <div class="screen-header-title">Коэффициенты</div>
+      </div>
+    </div>
+    <div class="info-banner">
+      <span class="info-glyph">i</span>
+      <span>Цвет и иконка показывают, где значение относительно медианы рынка. <b>Это учебная маркировка</b>, а не сигнал к сделке.</span>
+    </div>
     <div id="multipliers-content">
-      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
+      <div class="empty-state">
+        <div class="es-glyph">📈</div>
+        Сначала выбери компанию во вкладке «Поиск».
+      </div>
     </div>
   </div>
 
-  <!-- ДИВИДЕНДЫ -->
+  <!-- ──────── ДИВИДЕНДЫ ──────── -->
   <div class="tab-content" id="tab-dividends">
-    <h3 class="section-title">Дивиденды</h3>
+    <div class="chip-strip"><button class="chip" data-tab="profile">Профиль</button><button class="chip" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip active" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
+    <div class="breadcrumb"><span class="crumb-back" onclick="switchTab('profile')">← Профиль</span></div>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Дивиденды</div>
+        <div class="screen-header-title">Доходность и история</div>
+      </div>
+    </div>
     <div id="dividends-content">
-      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
+      <div class="empty-state">
+        <div class="es-glyph">💎</div>
+        Сначала выбери компанию во вкладке «Поиск».
+      </div>
     </div>
   </div>
 
-  <!-- ИНСАЙДЕРЫ -->
+  <!-- ──────── ИНСАЙДЕРЫ (скрыта) ──────── -->
   <div class="tab-content" id="tab-insiders">
-    <h3 class="section-title">Сделки инсайдеров</h3>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Инсайдеры</div>
+        <div class="screen-header-title">Сделки</div>
+      </div>
+    </div>
     <div id="insiders-content">
       <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
     </div>
   </div>
 
-  <!-- КАЛЕНДАРЬ -->
+  <!-- ──────── КАЛЕНДАРЬ ──────── -->
   <div class="tab-content" id="tab-calendar">
-    <h3 class="section-title">Корпоративный календарь</h3>
+    <div class="chip-strip"><button class="chip" data-tab="profile">Профиль</button><button class="chip" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip active" data-tab="calendar">Календарь</button></div>
+    <div class="breadcrumb"><span class="crumb-back" onclick="switchTab('profile')">← Профиль</span></div>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Календарь</div>
+        <div class="screen-header-title">Ближайшие отсечки</div>
+      </div>
+    </div>
     <div id="calendar-content">
-      <div class="empty-state">Сначала выбери компанию во вкладке «Поиск».</div>
+      <div class="empty-state">
+        <div class="es-glyph">📅</div>
+        Сначала выбери компанию во вкладке «Поиск».
+      </div>
     </div>
   </div>
 
-  <!-- СРАВНЕНИЕ -->
+  <!-- ──────── СРАВНЕНИЕ ──────── -->
   <div class="tab-content" id="tab-compare">
-    <h3 class="section-title">Сравнение эмитентов</h3>
+    <div class="screen-header">
+      <div>
+        <div class="screen-header-sub">Сравнение</div>
+        <div class="screen-header-title">Бок о бок</div>
+      </div>
+      <button class="btn-ghost" id="compareAddBtn">+ компанию</button>
+    </div>
 
-    <div id="compare-slots"></div>
-
-    <button class="btn-add" id="compareAddBtn" style="margin: 4px 0 18px;">+ добавить компанию</button>
+    <div id="compare-slots" class="compare-slots-row"></div>
 
     <div id="compare-table-wrap" style="display:none;">
-      <h3 class="section-title" style="margin-top: 22px;">Бок о бок</h3>
-      <div id="compare-table"></div>
+      <div class="cmp-table-wrap">
+        <div class="cmp-table-head">Бок о бок</div>
+        <div id="compare-table"></div>
+      </div>
     </div>
 
-    <div class="stub-block" style="margin-top: 18px;">
-      <b>📊 Сравнение по мультипликаторам</b>
-      Сейчас бок-о-бок видно базовые биржевые параметры. Сравнение по P/E, P/B, ROE и дивдоходности из Supabase — добавлю следующим шагом.
+    <div class="stub-block">
+      <div>
+        <b>📊 Скоро в сравнении</b><br>
+        <span style="font-size: 11px; color: var(--muted);">P/E, P/B, ROE и дивдоходность добавим в таблицу следующим шагом.</span>
+      </div>
     </div>
   </div>
 
-  <div class="footer" style="text-align: center; padding: 18px 20px; font-size: 11px; line-height: 1.6; color: var(--muted);">
-    16+ · Информация ознакомительная, не является ИИР · Академия «Инвестиции просто» · v2.0 ·
-    <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none; font-weight: 600;">подробнее →</a>
+  <div class="footer">
+    16+ · Академия «Инвестиции просто» · v3.0 ·
+    <a href="legal.html" target="_blank" rel="noopener noreferrer">условия и источники →</a>
   </div>
 </div>
 
-<!-- HINT POPUP (подключён, для будущих подсказок) -->
+<!-- ════════════ HINT POPUP ════════════ -->
 <div class="hint-popup" id="hintPopup">
   <div class="hint-content">
     <div id="hintText"></div>
     <button class="hint-close" onclick="closeHint()">Понятно</button>
   </div>
 </div>
+
+<!-- ════════════ MENU SHEET (все вкладки + чек-лист) ════════════ -->
+<div class="menu-sheet" id="menuSheet" onclick="if(event.target===this)closeMenu()">
+  <div class="menu-sheet-card">
+    <div class="menu-sheet-grabber"></div>
+    <div class="menu-sheet-title">Перейти к разделу</div>
+
+    <div class="menu-item" data-tab="home" onclick="menuJump('home')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3 L21 11 V21 H14 V14 H10 V21 H3 Z"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Главная</div>
+        <div class="menu-item-sub">Bento-плитки и недавняя компания</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="search" onclick="menuJump('search')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M16 16 L21 21"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Поиск</div>
+        <div class="menu-item-sub">Тикер · название · ISIN</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-sheet-title" style="margin-top: 10px;">Данные по компании</div>
+
+    <div class="menu-item" data-tab="profile" onclick="menuJump('profile')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9 H21 M7 13 H12 M7 16 H14"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Профиль</div>
+        <div class="menu-item-sub">Карточка компании, цена, описание</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="financials" onclick="menuJump('financials')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 14 L20 8"/><path d="M14 8 H20 V14"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Финансы</div>
+        <div class="menu-item-sub">Выручка, прибыль, EV</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="multipliers" onclick="menuJump('multipliers')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="17" r="3"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Мультипликаторы</div>
+        <div class="menu-item-sub">P/E, P/B, ROE — со светофором</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="dividends" onclick="menuJump('dividends')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L9 13 L13 16 L20 8 M20 8 V13 M20 8 H15"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Дивиденды</div>
+        <div class="menu-item-sub">Доходность, DSI, история</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="calendar" onclick="menuJump('calendar')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10 H21 M8 3 V7 M16 3 V7"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Календарь</div>
+        <div class="menu-item-sub">Ближайшие отсечки</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-item" data-tab="compare" onclick="menuJump('compare')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="8" height="12" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Сравнение</div>
+        <div class="menu-item-sub">До 3 компаний бок о бок</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div class="menu-sheet-title" style="margin-top: 10px;">Помощь</div>
+
+    <div class="menu-item" onclick="menuJump('__onboarding')">
+      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9 a3 3 0 1 1 4 3 v2"/><circle cx="12" cy="17" r="0.8" fill="currentColor"/></svg></div>
+      <div class="menu-item-body">
+        <div class="menu-item-title">Стартовый чек-лист</div>
+        <div class="menu-item-sub">7 шагов знакомства с приложением</div>
+      </div>
+      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <button class="menu-sheet-close" onclick="closeMenu()">Закрыть</button>
+  </div>
+</div>
+
+<!-- ════════════ BOTTOM TAB BAR ════════════ -->
+<nav class="bottom-tabs" aria-label="Главная навигация">
+  <button class="bottom-tab active" data-tab="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3 L21 11 V21 H14 V14 H10 V21 H3 Z"/></svg>
+    <span>Главная</span>
+  </button>
+  <button class="bottom-tab" data-tab="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M16 16 L21 21"/></svg>
+    <span>Поиск</span>
+  </button>
+  <button class="bottom-tab" data-tab="multipliers">
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="17" r="3"/></svg>
+    <span>Мульти</span>
+  </button>
+  <button class="bottom-tab" data-tab="dividends">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L9 13 L13 16 L20 8 M20 8 V13 M20 8 H15"/></svg>
+    <span>Дивы</span>
+  </button>
+  <button class="bottom-tab" data-tab="calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10 H21 M8 3 V7 M16 3 V7"/></svg>
+    <span>Календарь</span>
+  </button>
+</nav>
 
 <script>
 // ==================== TELEGRAM WEBAPP ====================
@@ -545,26 +564,153 @@ if (tg) {
 }
 
 // ==================== TABS ====================
-document.querySelectorAll('.tab').forEach(function(btn) {
+function switchTab(name) {
+  // Sync active state across all tab-controls (top .tab hidden, bottom-tab, and per-screen .chip)
+  document.querySelectorAll('.tab, .bottom-tab, .chip').forEach(function(b) {
+    var on = b.dataset.tab === name;
+    b.classList.toggle('active', on);
+    if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  var content = document.getElementById('tab-' + name);
+  if (content) content.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  closeMenu();
+}
+
+document.querySelectorAll('.tab, .bottom-tab, .chip').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(function(b) {
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected', 'true');
-    var content = document.getElementById('tab-' + btn.dataset.tab);
-    if (content) content.classList.add('active');
-    // Скролл в начало контента (особенно полезно при переходе из поиска)
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (btn.dataset.tab) switchTab(btn.dataset.tab);
   });
 });
 
-function switchTab(name) {
-  var btn = document.querySelector('.tab[data-tab="' + name + '"]');
-  if (btn) btn.click();
+// ==================== MENU SHEET ====================
+function openMenu() {
+  var ms = document.getElementById('menuSheet');
+  if (ms) ms.classList.add('show');
 }
+function closeMenu() {
+  var ms = document.getElementById('menuSheet');
+  if (ms) ms.classList.remove('show');
+}
+function menuJump(target) {
+  closeMenu();
+  if (target === '__onboarding') {
+    openOnboarding();
+  } else {
+    switchTab(target);
+  }
+}
+
+// ==================== ONBOARDING ====================
+function openOnboarding() {
+  var ov = document.getElementById('onbOverlay');
+  if (ov) ov.classList.add('show');
+}
+function closeOnboarding() {
+  var ov = document.getElementById('onbOverlay');
+  if (ov) ov.classList.remove('show');
+  try { localStorage.setItem('fk_onboarded', '1'); } catch(e) {}
+}
+function onbToggleStep(stepKey) {
+  var step = document.querySelector('.onb-step[data-step="' + stepKey + '"]');
+  if (!step) return;
+  step.classList.toggle('done');
+  onbUpdateProgress();
+  try {
+    var done = Array.from(document.querySelectorAll('.onb-step.done')).map(function(s){ return s.dataset.step; });
+    localStorage.setItem('fk_onboarded_steps', JSON.stringify(done));
+  } catch(e) {}
+}
+function onbUpdateProgress() {
+  var all = document.querySelectorAll('.onb-step');
+  var done = document.querySelectorAll('.onb-step.done');
+  var doneEl = document.getElementById('onbDone');
+  var fillEl = document.getElementById('onbFill');
+  if (doneEl) doneEl.textContent = done.length;
+  if (fillEl) fillEl.style.width = ((done.length / Math.max(all.length, 1)) * 100) + '%';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  // Restore step state
+  try {
+    var saved = JSON.parse(localStorage.getItem('fk_onboarded_steps') || '[]');
+    saved.forEach(function(k) {
+      var s = document.querySelector('.onb-step[data-step="' + k + '"]');
+      if (s) s.classList.add('done');
+    });
+  } catch(e) {}
+  onbUpdateProgress();
+
+  // Wire step clicks: mark done + jump to target tab + close overlay
+  document.querySelectorAll('.onb-step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      step.classList.add('done');
+      onbUpdateProgress();
+      try {
+        var done = Array.from(document.querySelectorAll('.onb-step.done')).map(function(s){ return s.dataset.step; });
+        localStorage.setItem('fk_onboarded_steps', JSON.stringify(done));
+      } catch(e) {}
+      var target = step.dataset.target;
+      closeOnboarding();
+      if (target) switchTab(target);
+    });
+  });
+
+  // First-visit autoshow
+  try {
+    if (!localStorage.getItem('fk_onboarded')) {
+      // Don't auto-show during access-gate flow; only after a small delay
+      setTimeout(function() {
+        if (!document.querySelector('.access-gate:not(.access-gate-hidden)')) openOnboarding();
+      }, 400);
+    }
+  } catch(e) {}
+});
+
+// ==================== HOME — recently viewed company ====================
+function saveRecentCompany(emitter) {
+  if (!emitter) return;
+  try {
+    localStorage.setItem('fk_recent_company', JSON.stringify({
+      id: emitter.emitent_id,
+      title: emitter.emitent_title,
+      ticker: emitter.primaryTicker,
+      cap: emitter.totalCap,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+  renderHomeRecent();
+}
+function renderHomeRecent() {
+  var el = document.getElementById('home-recent');
+  if (!el) return;
+  var raw = null;
+  try { raw = localStorage.getItem('fk_recent_company'); } catch(e) {}
+  if (!raw) { el.innerHTML = ''; return; }
+  var r;
+  try { r = JSON.parse(raw); } catch(e) { el.innerHTML = ''; return; }
+  if (!r || !r.title) { el.innerHTML = ''; return; }
+  var initials = (r.title || '').split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+  var capStr = (r.cap && r.cap > 0) ? formatMoney(r.cap) : '';
+  el.innerHTML =
+    '<div class="surface" style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="reopenRecentCompany()">'
+    + '  <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--acc-blue),var(--acc-blue-deep));color:#0E1116;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;letter-spacing:-0.04em;">' + escHtml(initials) + '</div>'
+    + '  <div style="flex:1; min-width:0;">'
+    + '    <div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(r.title) + '</div>'
+    + '    <div style="font-size:11px;color:var(--muted);">' + escHtml(r.ticker || '—') + (capStr ? ' · ' + escHtml(capStr) : '') + '</div>'
+    + '  </div>'
+    + '  <svg width="12" height="14" viewBox="0 0 12 14"><path d="M2 1l8 6-8 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    + '</div>';
+}
+function reopenRecentCompany() {
+  var raw = null;
+  try { raw = localStorage.getItem('fk_recent_company'); } catch(e) {}
+  if (!raw) return;
+  var r;
+  try { r = JSON.parse(raw); } catch(e) { return; }
+  if (r && r.id && typeof loadCompany === 'function') loadCompany(r.id);
+}
+document.addEventListener('DOMContentLoaded', renderHomeRecent);
 
 // ==================== HELPERS ====================
 function escHtml(str) {
@@ -784,15 +930,20 @@ function renderEmitterResults(emitters) {
   function renderItem(e) {
     var shares = filterShares(e.instruments);
     var bonds = filterBonds(e.instruments);
+    var primaryShare = shares.find(function(s) { return s.type === 'common_share'; }) || shares[0];
+    var ticker = (primaryShare && primaryShare.secid) || (bonds[0] && bonds[0].secid) || '—';
     var bits = [];
     if (shares.length) bits.push(shares.length + ' ' + pluralizeRu(shares.length, ['акция', 'акции', 'акций']));
     if (bonds.length) bits.push(bonds.length + ' ' + pluralizeRu(bonds.length, ['облигация', 'облигации', 'облигаций']));
     var sub = bits.length ? bits.join(' · ') : (e.instruments.length + ' ' + pluralizeRu(e.instruments.length, ['инструмент', 'инструмента', 'инструментов']));
-    var inn = e.emitent_inn ? ' · ИНН ' + escHtml(e.emitent_inn) : '';
-    return '<div class="moex-item" onclick="loadCompany(' + e.emitent_id + ')">' +
-      '<span class="moex-item-name">' + escHtml(e.emitent_title) + '</span>' +
-      '<div class="moex-item-details">' + escHtml(sub) + inn + '</div>' +
-    '</div>';
+    return '<div class="moex-item" onclick="loadCompany(' + e.emitent_id + ')">'
+      + '<div class="moex-item-ticker">' + escHtml(ticker) + '</div>'
+      + '<div class="moex-item-body">'
+      +   '<div class="moex-item-name">' + escHtml(e.emitent_title) + '</div>'
+      +   '<div class="moex-item-details">' + escHtml(sub) + '</div>'
+      + '</div>'
+      + '<svg class="moex-item-arrow" viewBox="0 0 12 14"><path d="M2 1l8 6-8 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      + '</div>';
   }
 
   results.innerHTML = toRender.map(renderItem).join('');
@@ -1003,15 +1154,28 @@ function metricCard(label, value, metric, opts) {
   }
   // Если задан явный цвет (tile), используем его вместо зональной логики
   var classes = 'metric-card';
+  var showZonePill = false;
   if (opts.tile) {
     classes += ' accent-' + opts.tile;
   } else {
     classes += ' zone-' + zone + (zone === 'na' ? ' metric-na' : '');
+    showZonePill = !opts.noZone && value !== null && value !== undefined;
   }
+
+  var zonePill = '';
+  if (showZonePill) {
+    var glyph = { green: '▲', amber: '◆', yellow: '◆', red: '▼', na: '·', gray: '·' }[zone] || '·';
+    var pillClass = (zone === 'yellow') ? 'amber' : zone;
+    zonePill = '<span class="zone zone-' + pillClass + ' zone-big"><span class="zone-glyph">' + glyph + '</span></span>';
+  }
+
   return '<div class="' + classes + '">'
-    + '<div class="metric-label">' + escHtml(label) + '</div>'
-    + '<div class="metric-value">' + escHtml(displayed) + '</div>'
-    + (opts.hint ? '<div class="metric-hint">' + escHtml(opts.hint) + '</div>' : '')
+    + '<div class="metric-card-body">'
+    +   '<div class="metric-label">' + escHtml(label) + '</div>'
+    +   '<div class="metric-value">' + escHtml(displayed) + '</div>'
+    +   (opts.hint ? '<div class="metric-hint">' + escHtml(opts.hint) + '</div>' : '')
+    + '</div>'
+    + zonePill
     + '</div>';
 }
 
@@ -1155,17 +1319,23 @@ function renderDividends(ticker, companyName) {
       var hint2 = (d.forecast.amount ? d.forecast.amount + ' ₽' : '') + (d.forecast.ex_date ? ' · отсечка ' + d.forecast.ex_date : '');
       html += metricCard('Прогнозная выплата', d.forecast.amount, null, { noZone: true, hint: hint2 });
     }
+    html += '</div>';
+
     if (d.dsi !== undefined && d.dsi !== null) {
-      // DSI: 0-1, чем выше тем стабильнее. >0.6 хорошо, 0.3-0.6 средне, <0.3 плохо
-      var dsiZone = d.dsi >= 0.6 ? 'green' : (d.dsi >= 0.3 ? 'yellow' : 'red');
-      html += '<div class="metric-card zone-' + dsiZone + '">'
-        + '<div class="metric-label">DSI · стабильность дивидендов</div>'
-        + '<div class="metric-value">' + fmtNum(d.dsi) + '</div>'
-        + '<div class="metric-hint">0–1, чем выше тем стабильнее платит</div>'
+      // DSI: 0–1, чем выше тем стабильнее. Шкала: 0 — нестабильно, 1 — стабильно
+      var pct = Math.max(0, Math.min(1, Number(d.dsi))) * 100;
+      html += '<div class="dsi-row" style="margin: 0 0 14px;">'
+        + '<div class="dsi-head">'
+        +   '<div class="dsi-label">DSI · индекс стабильности</div>'
+        +   '<div class="dsi-value">' + fmtNum(d.dsi) + '</div>'
+        + '</div>'
+        + '<div class="dsi-bar">'
+        +   '<div class="dsi-fill" style="width: ' + pct + '%;"></div>'
+        +   '<div class="dsi-marker" style="left: ' + pct + '%;"></div>'
+        + '</div>'
+        + '<div class="dsi-scale"><span>нестабильно</span><span>0,5</span><span>стабильно</span></div>'
         + '</div>';
     }
-
-    html += '</div>';
 
     // Совокупные выплаты по годам — стиль dohod.ru: каждый год виден, даже без выплат
     if (d.history && d.history.length > 0) {
@@ -1395,6 +1565,9 @@ async function loadCompany(emitent_id) {
   // График динамики цены акции
   if (primaryTicker) loadPriceChart(primaryTicker);
   else document.getElementById('prof-chart-block').style.display = 'none';
+
+  // Сохраняем как «недавно открытую» для блока на Главной
+  if (typeof saveRecentCompany === 'function') saveRecentCompany(currentCompany);
 }
 
 var HISTORY_CACHE = {};
@@ -1467,10 +1640,10 @@ async function drawPriceChart() {
         datasets: [{
           label: ticker + ' · цена закрытия, ₽',
           data: closes,
-          borderColor: '#3B3FBF',
-          backgroundColor: 'rgba(59,63,191,0.08)',
-          fill: true, tension: 0.2,
-          pointRadius: 0, borderWidth: 2,
+          borderColor: '#A8D5F0',
+          backgroundColor: 'rgba(168,213,240,0.12)',
+          fill: true, tension: 0.25,
+          pointRadius: 0, borderWidth: 2.2,
         }]
       },
       options: {
@@ -1478,7 +1651,8 @@ async function drawPriceChart() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1a2e', titleColor: '#fff', bodyColor: '#fff',
+            backgroundColor: '#23272F', titleColor: '#F6F4EF', bodyColor: '#F6F4EF',
+            borderColor: 'rgba(168,213,240,0.28)', borderWidth: 1,
             displayColors: false,
             callbacks: {
               label: function(ctx) { return Number(ctx.raw).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' ₽'; }
@@ -1486,8 +1660,8 @@ async function drawPriceChart() {
           }
         },
         scales: {
-          x: { ticks: { color: '#6b7280', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
-          y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { ticks: { color: '#8A8F9C', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
+          y: { ticks: { color: '#8A8F9C' }, grid: { color: 'rgba(255,255,255,0.06)' } },
         },
       }
     });
@@ -1614,28 +1788,51 @@ function renderCalendar(ticker, companyName) {
   events.sort(function(a, b) { return a.date_iso < b.date_iso ? -1 : 1; });
 
   if (events.length === 0) {
-    el.innerHTML = '<div class="stub-block"><b>📅 Ближайших дивидендных событий нет</b>'
-      + 'По «' + escHtml(companyName || ticker) + '» сейчас нет анонсированных будущих выплат.<br><br>'
-      + 'Календарь отчётов МСФО и ГОСА появится в следующих версиях.</div>';
+    el.innerHTML = '<div class="empty-state">'
+      + '<div class="es-glyph">📅</div>'
+      + '<b style="color:var(--text);display:block;margin-bottom:6px;">Ближайших дивидендных событий нет</b>'
+      + 'По «' + escHtml(companyName || ticker) + '» сейчас нет анонсированных будущих выплат.'
+      + '</div>'
+      + '<div class="stub-block" style="margin-top: 12px;">'
+      + '<div><b>Скоро в календаре</b><br><span style="font-size:11px;color:var(--muted);">Даты публикации отчётностей и ГОСА появятся в следующих версиях.</span></div>'
+      + '</div>';
     return;
   }
 
-  var html = '<div class="group-title" style="margin-top: 0;">Ближайшие дивидендные отсечки</div>';
-  html += '<table class="cmp-table"><thead><tr>'
-    + '<th>Дата</th><th>Тикер</th><th>Тип</th>'
-    + '<th style="text-align:right;">Сумма</th>'
-    + '<th style="text-align:right;">Доходность</th>'
-    + '</tr></thead><tbody>';
-  events.forEach(function(ev) {
-    html += '<tr>'
-      + '<td><b>' + escHtml(ev.date_ru) + '</b></td>'
-      + '<td><span class="moex-item-ticker">' + escHtml(ev.ticker) + '</span></td>'
-      + '<td>' + escHtml(ev.type) + (ev.period ? ' · ' + escHtml(ev.period) : '') + '</td>'
-      + '<td style="text-align:right;font-weight:700;">' + (ev.amount ? fmtNum(ev.amount) + ' ₽' : '—') + '</td>'
-      + '<td style="text-align:right;">' + (ev.yield ? fmtNum(ev.yield) + '%' : '—') + '</td>'
-      + '</tr>';
+  var MONTHS_RU_SHORT = ['янв.','февр.','мар.','апр.','мая','июня','июля','авг.','сент.','окт.','нояб.','дек.'];
+  var ACCENTS = ['blue', 'lav', 'cream'];
+
+  var html = '';
+  events.forEach(function(ev, i) {
+    // ev.date_ru формата DD.MM.YYYY → '18 июля' + '2025'
+    var dd = ev.date_ru.slice(0, 2);
+    var mm = parseInt(ev.date_ru.slice(3, 5), 10) - 1;
+    var yy = ev.date_ru.slice(6, 10);
+    var monthShort = MONTHS_RU_SHORT[mm] || '—';
+    var dateLine = parseInt(dd, 10) + ' ' + monthShort;
+    var accent = ACCENTS[i % ACCENTS.length];
+    var isForecast = ev.amount === null || ev.amount === undefined;
+
+    html += '<div class="cal-row">'
+      + '<div class="cal-date ' + accent + '">'
+      +   '<div class="cal-d">' + escHtml(dateLine) + '</div>'
+      +   '<div class="cal-y">' + escHtml(yy) + '</div>'
+      + '</div>'
+      + '<div class="cal-body">'
+      +   '<div><span class="cal-ticker">' + escHtml(ev.ticker) + '</span>'
+      +     (isForecast ? '<span class="cal-forecast">прогноз</span>' : '') + '</div>'
+      +   '<div class="cal-type">' + escHtml(ev.type) + (ev.period ? ' · ' + escHtml(ev.period) : '') + '</div>'
+      + '</div>'
+      + '<div class="cal-vals">'
+      +   '<div class="cal-sum">' + (ev.amount ? fmtNum(ev.amount) + ' <span class="unit">₽</span>' : '<span style="color:var(--muted)">?</span>') + '</div>'
+      +   '<div class="cal-yld">' + (ev.yield ? fmtNum(ev.yield) + '%' : '<span style="color:var(--muted)">?</span>') + '</div>'
+      + '</div>'
+      + '</div>';
   });
-  html += '</tbody></table>';
+
+  html += '<div class="stub-block" style="margin-top: 12px;">'
+    + '<div><b>Скоро в календаре</b><br><span style="font-size:11px;color:var(--muted);">Даты публикации отчётностей и ГОСА — в следующих версиях.</span></div>'
+    + '</div>';
 
   el.innerHTML = html;
 }
@@ -1932,27 +2129,30 @@ function cmpRender() {
 
 function renderCmpSlot(idx) {
   var s = cmpState[idx];
-  var header = '<div class="cmp-slot-header">'
-    + '<span class="cmp-slot-title">Компания ' + (idx + 1) + '</span>'
-    + '<button class="btn-remove" onclick="cmpRemove(' + idx + ')" title="Убрать">×</button>'
-    + '</div>';
 
   if (s && s.emitent_id) {
-    return header
-      + '<div class="cmp-slot-loaded">'
-      +   '<span class="cmp-slot-name">' + escHtml(s.name) + '</span>'
-      +   '<span class="cmp-slot-ticker">' + (s.primaryTicker ? escHtml(s.primaryTicker) : 'компания') + '</span>'
+    var initials = (s.name || '').split(/\s+/).slice(0, 2).map(function(w){ return w[0]||''; }).join('').toUpperCase().slice(0, 2);
+    return '<div class="cmp-slot-head">'
+      +    '<div class="cmp-slot-avatar">' + escHtml(initials) + '</div>'
+      +    '<button class="cmp-slot-remove" onclick="cmpRemove(' + idx + ')" title="Убрать">×</button>'
+      + '</div>'
+      + '<div>'
+      +   '<div class="cmp-slot-ticker">' + escHtml(s.primaryTicker || '—') + '</div>'
+      +   '<div class="cmp-slot-name">' + escHtml(s.name) + '</div>'
       + '</div>';
   }
 
-  return header
+  return '<div class="cmp-slot-empty">'
+    + '<div class="plus">+</div>'
+    + '<div class="lbl">Найти<br>компанию</div>'
     + '<div class="cmp-slot-search">'
-    +   '<input type="text" id="cmp-input-' + idx + '" placeholder="Тикер, название или ISIN" '
+    +   '<input type="text" id="cmp-input-' + idx + '" placeholder="Тикер или название" '
     +   'onkeydown="if(event.key===\'Enter\'){event.preventDefault();cmpSearch(' + idx + ');}">'
     +   '<button onclick="cmpSearch(' + idx + ')">Найти</button>'
     + '</div>'
-    + '<div class="cmp-slot-status" id="cmp-status-' + idx + '"></div>'
-    + '<div class="cmp-slot-results" id="cmp-results-' + idx + '"></div>';
+    + '<div class="cmp-slot-status" id="cmp-status-' + idx + '" style="font-size:10px;color:var(--muted);min-height:14px;text-align:center;"></div>'
+    + '<div class="cmp-slot-results" id="cmp-results-' + idx + '" style="max-height:180px;overflow-y:auto;width:100%;"></div>'
+    + '</div>';
 }
 
 function cmpAdd() {
