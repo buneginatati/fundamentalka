@@ -270,11 +270,13 @@
 
         <!-- О компании -->
         <div class="surface span-full" id="prof-description-block" style="display:none;">
-          <div class="tile-label" style="margin-bottom: 8px;">О компании</div>
-          <div id="prof-description" style="font-size: 14px; line-height: 1.55; color: var(--text); text-wrap: pretty;"></div>
-          <div style="margin-top: 10px; font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.5;">
-            Описание сгенерировано ИИ по открытым данным — для образовательных целей. Перед принятием решений сверяйтесь с официальными источниками.
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom: 8px;">
+            <span class="tile-label">О компании</span>
+            <span class="ai-badge" title="Текст сгенерирован ИИ по открытым данным. Перед принятием решений сверяйтесь с официальными источниками."
+                  onclick="showHint('Описание сгенерировано ИИ по открытым данным — для образовательных целей. Перед принятием решений сверяйтесь с официальными источниками.')"
+                  style="cursor:pointer;">✦&nbsp;AI</span>
           </div>
+          <div id="prof-description" style="font-size: 14px; line-height: 1.55; color: var(--text); text-wrap: pretty;"></div>
         </div>
 
         <!-- График -->
@@ -421,8 +423,8 @@
   </div>
 
   <div class="footer">
-    16+ · Информация ознакомительная, не является ИИР · Академия «Инвестиции просто» · v3.0 ·
-    <a href="legal.html" target="_blank" rel="noopener noreferrer">подробнее →</a>
+    16+ · Академия «Инвестиции просто» · v3.0 ·
+    <a href="legal.html" target="_blank" rel="noopener noreferrer">условия и источники →</a>
   </div>
 </div>
 
