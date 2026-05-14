@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Превью лендинга — Вебинар 2026</title>
+<style>html,body{margin:0;padding:0;background:#F1ECE0;}</style>
+</head>
+<body>
+<!-- ═══════════════════════════════════════════════════════════════════
+     Hero / Главный экран — вебинар «Как инвестировать в 2026 году»
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-hero">
+  <div class="lp-hero__inner">
+    <div class="lp-hero__eyebrow">
+      <span class="lp-hero__dot"></span>
+      Бесплатный онлайн-вебинар
+    </div>
+    <div class="lp-hero__date">Сегодня, в 12:00 по МСК</div>
+
+    <h1 class="lp-hero__title">
+      Как инвестировать<br>
+      в <span class="lp-hero__pill">2026</span> году
+    </h1>
+
+    <p class="lp-hero__sub">
+      10 принципов построения прибыльного портфеля<br>
+      в новых экономических условиях
+    </p>
+
+    <a class="lp-hero__cta" href="#registration" target="_self">
+      Зарегистрироваться на вебинар
+      <span class="lp-hero__cta-arrow">→</span>
+    </a>
+
+    <div class="lp-hero__brand">
+      <span class="lp-hero__brand-mark">₽</span>
+      Академия «Инвестиции просто»
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-hero {
+    box-sizing: border-box;
+    width: 100%;
+    background: #F1ECE0;
+    padding: 56px 20px 64px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #0B0B0B;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .lp-hero *, .lp-hero *::before, .lp-hero *::after { box-sizing: border-box; }
+  .lp-hero__inner {
+    max-width: 1100px; margin: 0 auto;
+  }
+  .lp-hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #3429D2; color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .lp-hero__dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #FFFFFF; flex-shrink: 0;
+  }
+  .lp-hero__date {
+    margin-top: 14px;
+    font-size: 15px; font-weight: 600; color: #4A4036;
+    letter-spacing: -0.01em;
+  }
+  .lp-hero__title {
+    margin: 22px 0 0;
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.96;
+    color: #0B0B0B;
+    text-transform: none;
+  }
+  .lp-hero__pill {
+    display: inline-block;
+    padding: 0 18px 4px;
+    margin: 0 4px;
+    background: #3429D2;
+    color: #FFFFFF;
+    border-radius: 18px;
+    line-height: 1;
+    transform: translateY(2px);
+  }
+  .lp-hero__sub {
+    margin: 26px 0 0;
+    max-width: 620px;
+    font-size: 18px; font-weight: 500;
+    line-height: 1.45;
+    color: #4A4036;
+    letter-spacing: -0.01em;
+  }
+  .lp-hero__cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-top: 36px;
+    padding: 20px 28px;
+    background: #3429D2; color: #FFFFFF;
+    border-radius: 16px;
+    font-family: 'Onest', sans-serif;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    box-shadow: 0 4px 0 #1F18A0;
+  }
+  .lp-hero__cta:hover {
+    background: #4036E0;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #1F18A0;
+  }
+  .lp-hero__cta:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1F18A0;
+  }
+  .lp-hero__cta-arrow {
+    display: inline-block;
+    font-size: 20px; font-weight: 800;
+    transition: transform 0.15s;
+  }
+  .lp-hero__cta:hover .lp-hero__cta-arrow {
+    transform: translateX(3px);
+  }
+  .lp-hero__brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 40px;
+    font-size: 13px; font-weight: 600;
+    color: #6B5F52; letter-spacing: -0.005em;
+  }
+  .lp-hero__brand-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #3429D2; color: #FFFFFF;
+    font-weight: 700; font-size: 14px;
+    line-height: 1;
+  }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-hero { padding: 80px 40px 96px; }
+    .lp-hero__title { font-size: 88px; }
+    .lp-hero__sub { font-size: 20px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-hero { padding: 104px 60px 120px; }
+    .lp-hero__title { font-size: 112px; }
+    .lp-hero__pill { padding: 0 26px 6px; border-radius: 24px; transform: translateY(4px); }
+    .lp-hero__sub { font-size: 22px; max-width: 720px; }
+    .lp-hero__cta { font-size: 19px; padding: 22px 32px; }
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Benefits / Экран 2 — На вебинаре Вы:
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-benefits">
+  <div class="lp-benefits__inner">
+    <div class="lp-benefits__eyebrow">
+      <span class="lp-benefits__dot"></span>
+      Программа вебинара
+    </div>
+
+    <h2 class="lp-benefits__title">
+      На вебинаре <span class="lp-benefits__pill">Вы:</span>
+    </h2>
+
+    <div class="lp-benefits__grid">
+      <article class="lp-benefit lp-benefit--01">
+        <div class="lp-benefit__num">01</div>
+        <h3 class="lp-benefit__lead">Разберётесь, что реально происходит на рынке в 2026 году</h3>
+        <p class="lp-benefit__desc">Сейчас рынок кажется хаотичным, но деньги на нём всё равно зарабатываются.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--02">
+        <div class="lp-benefit__num">02</div>
+        <h3 class="lp-benefit__lead">Получите 10 принципов портфеля, который даёт прибыль в новых условиях</h3>
+        <p class="lp-benefit__desc">Не набор случайных покупок, а логику, на которой держится сильная стратегия.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--03">
+        <div class="lp-benefit__num">03</div>
+        <h3 class="lp-benefit__lead">Поймёте, куда вкладывать деньги прямо сейчас</h3>
+        <p class="lp-benefit__desc">Какие активы стоит рассматривать в текущей фазе рынка.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--04">
+        <div class="lp-benefit__num">04</div>
+        <h3 class="lp-benefit__lead">Узнаете главную причину, почему у многих инвесторов нет результата</h3>
+        <p class="lp-benefit__desc">Хотя со стороны кажется, что они делают всё правильно.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--05">
+        <div class="lp-benefit__num">05</div>
+        <h3 class="lp-benefit__lead">Получите понятный план действий</h3>
+        <p class="lp-benefit__desc">Чтобы больше не метаться между новостями, не принимать решения в панике и действовать наугад.</p>
+      </article>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-benefits {
+    box-sizing: border-box;
+    width: 100%;
+    background: #F1ECE0;
+    padding: 56px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #0B0B0B;
+    -webkit-font-smoothing: antialiased;
+  }
+  .lp-benefits *, .lp-benefits *::before, .lp-benefits *::after { box-sizing: border-box; }
+  .lp-benefits__inner { max-width: 1100px; margin: 0 auto; }
+
+  .lp-benefits__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #3429D2; color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .lp-benefits__dot { width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF; }
+
+  .lp-benefits__title {
+    margin: 22px 0 32px;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    color: #0B0B0B;
+  }
+  .lp-benefits__pill {
+    display: inline-block;
+    padding: 0 14px 2px;
+    margin-left: 4px;
+    background: #F0C24A; color: #0B0B0B;
+    border-radius: 14px;
+    line-height: 1;
+    transform: translateY(2px);
+  }
+
+  .lp-benefits__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .lp-benefit {
+    position: relative;
+    padding: 24px 22px 24px 22px;
+    background: #FFFFFF;
+    border-radius: 22px;
+    border: 1px solid rgba(11,11,11,0.06);
+  }
+  .lp-benefit__num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: #3429D2; color: #FFFFFF;
+    font-family: 'Onest', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+  }
+  .lp-benefit__lead {
+    margin: 0 0 8px;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.25;
+    color: #0B0B0B;
+  }
+  .lp-benefit__desc {
+    margin: 0;
+    font-size: 15px; font-weight: 400;
+    color: #4A4036;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  /* Окраска номеров в стиле «Голубых фишек» — разнообразие в палитре */
+  .lp-benefit--02 .lp-benefit__num { background: #0B0B0B; }
+  .lp-benefit--03 .lp-benefit__num { background: #F0C24A; color: #0B0B0B; }
+  .lp-benefit--04 .lp-benefit__num { background: #0B0B0B; }
+  .lp-benefit--05 .lp-benefit__num { background: #3429D2; }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-benefits { padding: 72px 40px; }
+    .lp-benefits__title { font-size: 56px; }
+    .lp-benefits__grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .lp-benefit__lead { font-size: 20px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-benefits { padding: 96px 60px; }
+    .lp-benefits__title { font-size: 72px; margin-bottom: 44px; }
+    .lp-benefits__pill { padding: 0 22px 4px; border-radius: 20px; transform: translateY(4px); }
+    .lp-benefit { padding: 28px 26px; }
+    .lp-benefit__lead { font-size: 22px; }
+    .lp-benefit__desc { font-size: 16px; }
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Author / Экран 3 — Вебинар ведёт: Татьяна Бунегина
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     Фото Татьяны вставить в .lp-author__photo (заменить SRC у <img>)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-author">
+  <div class="lp-author__inner">
+    <div class="lp-author__eyebrow">
+      <span class="lp-author__dot"></span>
+      Кто ведёт
+    </div>
+
+    <h2 class="lp-author__title">
+      Вебинар <span class="lp-author__pill">ведёт</span>
+    </h2>
+
+    <div class="lp-author__layout">
+      <div class="lp-author__photo-col">
+        <div class="lp-author__photo">
+          <!-- ВАЖНО: загрузить tatyana.jpg в медиатеку Tilda и заменить SRC ниже на полученный URL.
+               Пока — встроенный placehold (на превью видно структуру). -->
+          <img src="tatyana.jpg" alt="Татьяна Бунегина">
+        </div>
+        <div class="lp-author__name-card">
+          <div class="lp-author__name">Татьяна Бунегина</div>
+          <div class="lp-author__role">Основатель Академии «Инвестиции просто»</div>
+        </div>
+      </div>
+
+      <div class="lp-author__bio-col">
+        <p class="lp-author__intro">
+          Практикующий инвестор и основатель академии «Инвестиции просто».
+        </p>
+        <ul class="lp-author__list">
+          <li>Практикующий инвестор с реальным опытом</li>
+          <li>Основатель Академии инвестиций «Инвестиции просто»</li>
+          <li>Участвовала в акционировании компании и знает рынок изнутри</li>
+          <li>Ведёт инвесторов годами и видит, как растут их капитал, доход и уверенность</li>
+          <li>Выступает на конференциях и публикуется в деловых медиа</li>
+          <li>Помогает выстраивать не «набор активов», а личную инвестиционную систему под цели человека</li>
+        </ul>
+
+        <div class="lp-author__media">
+          <div class="lp-author__media-label">Публикации и выступления:</div>
+          <div class="lp-author__media-row">
+            <!-- ЗАМЕНИТЬ логотипы на реальные. Сейчас плейсхолдеры. -->
+            <div class="lp-author__media-logo">Медиа&nbsp;1</div>
+            <div class="lp-author__media-logo">Медиа&nbsp;2</div>
+            <div class="lp-author__media-logo">Медиа&nbsp;3</div>
+            <div class="lp-author__media-logo">Медиа&nbsp;4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-author {
+    box-sizing: border-box;
+    width: 100%;
+    background: #0B0B0B;
+    padding: 56px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #F1ECE0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .lp-author *, .lp-author *::before, .lp-author *::after { box-sizing: border-box; }
+  .lp-author__inner { max-width: 1100px; margin: 0 auto; }
+
+  .lp-author__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #3429D2; color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .lp-author__dot { width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF; }
+
+  .lp-author__title {
+    margin: 22px 0 36px;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.02;
+    color: #F1ECE0;
+  }
+  .lp-author__pill {
+    display: inline-block;
+    padding: 0 14px 2px;
+    margin-left: 4px;
+    background: #3429D2; color: #FFFFFF;
+    border-radius: 14px;
+    line-height: 1; transform: translateY(2px);
+  }
+
+  .lp-author__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .lp-author__photo-col { display: flex; flex-direction: column; gap: 14px; }
+  .lp-author__photo {
+    aspect-ratio: 4/5;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 24px;
+    background: #1A1A1A;
+  }
+  .lp-author__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .lp-author__name-card {
+    padding: 16px 18px;
+    background: #F1ECE0; color: #0B0B0B;
+    border-radius: 18px;
+  }
+  .lp-author__name {
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .lp-author__role {
+    margin-top: 4px;
+    font-size: 13px; font-weight: 500;
+    color: #4A4036; letter-spacing: -0.005em;
+  }
+
+  .lp-author__intro {
+    margin: 0 0 18px;
+    font-size: 19px; font-weight: 600;
+    letter-spacing: -0.015em; line-height: 1.35;
+    color: #F1ECE0;
+  }
+
+  .lp-author__list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .lp-author__list li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 15px; line-height: 1.5;
+    color: #D6CFC0; letter-spacing: -0.005em;
+  }
+  .lp-author__list li::before {
+    content: "";
+    position: absolute; left: 0; top: 9px;
+    width: 14px; height: 2px;
+    background: #3429D2;
+    border-radius: 2px;
+  }
+
+  .lp-author__media { margin-top: 26px; }
+  .lp-author__media-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: #8A8275;
+    margin-bottom: 12px;
+  }
+  .lp-author__media-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .lp-author__media-logo {
+    padding: 10px 18px;
+    background: rgba(241,236,224,0.06);
+    border: 1px solid rgba(241,236,224,0.18);
+    border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    color: #F1ECE0; letter-spacing: -0.005em;
+  }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-author { padding: 72px 40px; }
+    .lp-author__title { font-size: 56px; }
+    .lp-author__layout {
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 36px;
+    }
+    .lp-author__photo { aspect-ratio: 3/4; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-author { padding: 96px 60px; }
+    .lp-author__title { font-size: 72px; margin-bottom: 48px; }
+    .lp-author__pill { padding: 0 22px 4px; border-radius: 20px; transform: translateY(4px); }
+    .lp-author__layout { gap: 56px; }
+    .lp-author__intro { font-size: 21px; }
+    .lp-author__list li { font-size: 16px; }
+    .lp-author__name { font-size: 26px; }
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Testimonials / Экран 4 — Отзывы
+     Универсальный grid: 6 карточек-плейсхолдеров. Заменить тексты/фото
+     учеников в Tilda или прислать скриншоты — соберу финальный вариант.
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-testimonials">
+  <div class="lp-testimonials__inner">
+    <div class="lp-testimonials__eyebrow">
+      <span class="lp-testimonials__dot"></span>
+      Отзывы учеников
+    </div>
+
+    <h2 class="lp-testimonials__title">
+      Люди уже применяют эти принципы<br>
+      и получают <span class="lp-testimonials__pill">результаты</span>
+    </h2>
+
+    <div class="lp-testimonials__grid">
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--blue">А</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--yellow">М</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--mint">Е</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--coral">С</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--blue">И</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+
+      <article class="lp-testimonial">
+        <div class="lp-testimonial__avatar lp-testimonial__avatar--yellow">Н</div>
+        <div class="lp-testimonial__body">
+          <div class="lp-testimonial__author">
+            <span class="lp-testimonial__name">Имя ученика</span>
+            <span class="lp-testimonial__role">портфель / срок обучения</span>
+          </div>
+          <p class="lp-testimonial__text">«Цитата отзыва. Что было до Академии, что изменилось после. Конкретика — какие принципы внедрил, какой результат получил.»</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="lp-testimonials__source">
+      Больше отзывов: <a href="https://t.me/invest_prosto_otziv" target="_blank" rel="noopener noreferrer">@invest_prosto_otziv</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-testimonials {
+    box-sizing: border-box;
+    width: 100%;
+    background: #F1ECE0;
+    padding: 56px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #0B0B0B;
+    -webkit-font-smoothing: antialiased;
+  }
+  .lp-testimonials *, .lp-testimonials *::before, .lp-testimonials *::after { box-sizing: border-box; }
+  .lp-testimonials__inner { max-width: 1100px; margin: 0 auto; }
+
+  .lp-testimonials__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #3429D2; color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .lp-testimonials__dot { width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF; }
+
+  .lp-testimonials__title {
+    margin: 22px 0 36px;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.08;
+    color: #0B0B0B;
+  }
+  .lp-testimonials__pill {
+    display: inline-block;
+    padding: 0 14px 2px;
+    background: #F0C24A; color: #0B0B0B;
+    border-radius: 14px;
+    line-height: 1; transform: translateY(2px);
+  }
+
+  .lp-testimonials__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .lp-testimonial {
+    display: flex; gap: 14px;
+    padding: 20px 20px;
+    background: #FFFFFF;
+    border-radius: 22px;
+    border: 1px solid rgba(11,11,11,0.06);
+  }
+  .lp-testimonial__avatar {
+    flex-shrink: 0;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Onest', sans-serif;
+    font-weight: 800; font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+  .lp-testimonial__avatar--blue   { background: #3429D2; color: #FFFFFF; }
+  .lp-testimonial__avatar--yellow { background: #F0C24A; color: #0B0B0B; }
+  .lp-testimonial__avatar--mint   { background: #C7E5C4; color: #0B0B0B; }
+  .lp-testimonial__avatar--coral  { background: #F8B5A6; color: #0B0B0B; }
+
+  .lp-testimonial__body { flex: 1; min-width: 0; }
+  .lp-testimonial__author {
+    display: flex; flex-direction: column; gap: 2px;
+    margin-bottom: 10px;
+  }
+  .lp-testimonial__name {
+    font-size: 15px; font-weight: 700;
+    color: #0B0B0B; letter-spacing: -0.01em;
+  }
+  .lp-testimonial__role {
+    font-size: 12px; font-weight: 500;
+    color: #6B5F52; letter-spacing: -0.005em;
+  }
+  .lp-testimonial__text {
+    margin: 0;
+    font-size: 14px; font-weight: 400;
+    color: #4A4036;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  .lp-testimonials__source {
+    margin-top: 24px;
+    font-size: 13px; color: #6B5F52;
+    text-align: center;
+    letter-spacing: -0.005em;
+  }
+  .lp-testimonials__source a {
+    color: #3429D2;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .lp-testimonials__source a:hover { text-decoration: underline; }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-testimonials { padding: 72px 40px; }
+    .lp-testimonials__title { font-size: 48px; }
+    .lp-testimonials__grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-testimonials { padding: 96px 60px; }
+    .lp-testimonials__title { font-size: 64px; margin-bottom: 44px; }
+    .lp-testimonials__pill { padding: 0 22px 4px; border-radius: 20px; transform: translateY(4px); }
+    .lp-testimonials__grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .lp-testimonial__text { font-size: 15px; }
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Final CTA / Финальная кнопка регистрации
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-cta">
+  <div class="lp-cta__inner">
+    <div class="lp-cta__eyebrow">
+      <span class="lp-cta__dot"></span>
+      Регистрация
+    </div>
+
+    <h2 class="lp-cta__title">
+      Сегодня в&nbsp;<span class="lp-cta__pill-time">12:00</span><br>
+      по&nbsp;Москве
+    </h2>
+
+    <p class="lp-cta__sub">
+      Бесплатный вебинар «Как инвестировать в 2026 году».<br>
+      10 принципов прибыльного портфеля в новых условиях.
+    </p>
+
+    <a class="lp-cta__btn" href="#registration" target="_self">
+      Зарегистрироваться на вебинар
+      <span class="lp-cta__btn-arrow">→</span>
+    </a>
+
+    <div class="lp-cta__note">
+      Запись получат только зарегистрированные участники
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-cta {
+    box-sizing: border-box;
+    width: 100%;
+    background: #3429D2;
+    padding: 64px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #FFFFFF;
+    -webkit-font-smoothing: antialiased;
+    text-align: center;
+  }
+  .lp-cta *, .lp-cta *::before, .lp-cta *::after { box-sizing: border-box; }
+  .lp-cta__inner { max-width: 720px; margin: 0 auto; }
+
+  .lp-cta__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.16); color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.24);
+  }
+  .lp-cta__dot { width: 6px; height: 6px; border-radius: 50%; background: #F0C24A; }
+
+  .lp-cta__title {
+    margin: 22px 0 18px;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.0;
+    color: #FFFFFF;
+  }
+  .lp-cta__pill-time {
+    display: inline-block;
+    padding: 0 16px 2px;
+    background: #F0C24A; color: #0B0B0B;
+    border-radius: 16px;
+    line-height: 1; transform: translateY(2px);
+  }
+
+  .lp-cta__sub {
+    margin: 0 auto 32px;
+    max-width: 560px;
+    font-size: 17px; font-weight: 500;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: -0.005em;
+  }
+
+  .lp-cta__btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 22px 32px;
+    background: #FFFFFF; color: #3429D2;
+    border-radius: 18px;
+    font-family: 'Onest', sans-serif;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    box-shadow: 0 5px 0 #F0C24A;
+  }
+  .lp-cta__btn:hover {
+    background: #F8F4EA;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 0 #F0C24A;
+  }
+  .lp-cta__btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #F0C24A;
+  }
+  .lp-cta__btn-arrow {
+    font-size: 22px; font-weight: 800;
+    transition: transform 0.15s;
+  }
+  .lp-cta__btn:hover .lp-cta__btn-arrow { transform: translateX(3px); }
+
+  .lp-cta__note {
+    margin-top: 24px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: -0.005em;
+  }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-cta { padding: 88px 40px; }
+    .lp-cta__title { font-size: 64px; }
+    .lp-cta__sub { font-size: 18px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-cta { padding: 112px 60px; }
+    .lp-cta__title { font-size: 80px; }
+    .lp-cta__pill-time { padding: 0 24px 4px; border-radius: 22px; transform: translateY(4px); }
+    .lp-cta__sub { font-size: 19px; }
+    .lp-cta__btn { font-size: 20px; padding: 24px 36px; }
+  }
+</style>
+
+</body></html>

@@ -1,0 +1,131 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     Final CTA / Финальная кнопка регистрации
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-cta">
+  <div class="lp-cta__inner">
+    <div class="lp-cta__eyebrow">
+      <span class="lp-cta__dot"></span>
+      Регистрация
+    </div>
+
+    <h2 class="lp-cta__title">
+      Сегодня в&nbsp;<span class="lp-cta__pill-time">12:00</span><br>
+      по&nbsp;Москве
+    </h2>
+
+    <p class="lp-cta__sub">
+      Бесплатный вебинар «Как инвестировать в 2026 году».<br>
+      10 принципов прибыльного портфеля в новых условиях.
+    </p>
+
+    <a class="lp-cta__btn" href="#registration" target="_self">
+      Зарегистрироваться на вебинар
+      <span class="lp-cta__btn-arrow">→</span>
+    </a>
+
+    <div class="lp-cta__note">
+      Запись получат только зарегистрированные участники
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-cta {
+    box-sizing: border-box;
+    width: 100%;
+    background: #3429D2;
+    padding: 64px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #FFFFFF;
+    -webkit-font-smoothing: antialiased;
+    text-align: center;
+  }
+  .lp-cta *, .lp-cta *::before, .lp-cta *::after { box-sizing: border-box; }
+  .lp-cta__inner { max-width: 720px; margin: 0 auto; }
+
+  .lp-cta__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.16); color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.24);
+  }
+  .lp-cta__dot { width: 6px; height: 6px; border-radius: 50%; background: #F0C24A; }
+
+  .lp-cta__title {
+    margin: 22px 0 18px;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.0;
+    color: #FFFFFF;
+  }
+  .lp-cta__pill-time {
+    display: inline-block;
+    padding: 0 16px 2px;
+    background: #F0C24A; color: #0B0B0B;
+    border-radius: 16px;
+    line-height: 1; transform: translateY(2px);
+  }
+
+  .lp-cta__sub {
+    margin: 0 auto 32px;
+    max-width: 560px;
+    font-size: 17px; font-weight: 500;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: -0.005em;
+  }
+
+  .lp-cta__btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 22px 32px;
+    background: #FFFFFF; color: #3429D2;
+    border-radius: 18px;
+    font-family: 'Onest', sans-serif;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    box-shadow: 0 5px 0 #F0C24A;
+  }
+  .lp-cta__btn:hover {
+    background: #F8F4EA;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 0 #F0C24A;
+  }
+  .lp-cta__btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #F0C24A;
+  }
+  .lp-cta__btn-arrow {
+    font-size: 22px; font-weight: 800;
+    transition: transform 0.15s;
+  }
+  .lp-cta__btn:hover .lp-cta__btn-arrow { transform: translateX(3px); }
+
+  .lp-cta__note {
+    margin-top: 24px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: -0.005em;
+  }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-cta { padding: 88px 40px; }
+    .lp-cta__title { font-size: 64px; }
+    .lp-cta__sub { font-size: 18px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-cta { padding: 112px 60px; }
+    .lp-cta__title { font-size: 80px; }
+    .lp-cta__pill-time { padding: 0 24px 4px; border-radius: 22px; transform: translateY(4px); }
+    .lp-cta__sub { font-size: 19px; }
+    .lp-cta__btn { font-size: 20px; padding: 24px 36px; }
+  }
+</style>

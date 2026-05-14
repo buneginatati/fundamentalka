@@ -1,0 +1,150 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     Benefits / Экран 2 — На вебинаре Вы:
+     Вставлять в Tilda как блок T123 (Custom HTML)
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+
+<div class="lp-section lp-benefits">
+  <div class="lp-benefits__inner">
+    <div class="lp-benefits__eyebrow">
+      <span class="lp-benefits__dot"></span>
+      Программа вебинара
+    </div>
+
+    <h2 class="lp-benefits__title">
+      На вебинаре <span class="lp-benefits__pill">Вы:</span>
+    </h2>
+
+    <div class="lp-benefits__grid">
+      <article class="lp-benefit lp-benefit--01">
+        <div class="lp-benefit__num">01</div>
+        <h3 class="lp-benefit__lead">Разберётесь, что реально происходит на рынке в 2026 году</h3>
+        <p class="lp-benefit__desc">Сейчас рынок кажется хаотичным, но деньги на нём всё равно зарабатываются.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--02">
+        <div class="lp-benefit__num">02</div>
+        <h3 class="lp-benefit__lead">Получите 10 принципов портфеля, который даёт прибыль в новых условиях</h3>
+        <p class="lp-benefit__desc">Не набор случайных покупок, а логику, на которой держится сильная стратегия.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--03">
+        <div class="lp-benefit__num">03</div>
+        <h3 class="lp-benefit__lead">Поймёте, куда вкладывать деньги прямо сейчас</h3>
+        <p class="lp-benefit__desc">Какие активы стоит рассматривать в текущей фазе рынка.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--04">
+        <div class="lp-benefit__num">04</div>
+        <h3 class="lp-benefit__lead">Узнаете главную причину, почему у многих инвесторов нет результата</h3>
+        <p class="lp-benefit__desc">Хотя со стороны кажется, что они делают всё правильно.</p>
+      </article>
+
+      <article class="lp-benefit lp-benefit--05">
+        <div class="lp-benefit__num">05</div>
+        <h3 class="lp-benefit__lead">Получите понятный план действий</h3>
+        <p class="lp-benefit__desc">Чтобы больше не метаться между новостями, не принимать решения в панике и действовать наугад.</p>
+      </article>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lp-section.lp-benefits {
+    box-sizing: border-box;
+    width: 100%;
+    background: #F1ECE0;
+    padding: 56px 20px;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #0B0B0B;
+    -webkit-font-smoothing: antialiased;
+  }
+  .lp-benefits *, .lp-benefits *::before, .lp-benefits *::after { box-sizing: border-box; }
+  .lp-benefits__inner { max-width: 1100px; margin: 0 auto; }
+
+  .lp-benefits__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #3429D2; color: #FFFFFF;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .lp-benefits__dot { width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF; }
+
+  .lp-benefits__title {
+    margin: 22px 0 32px;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    color: #0B0B0B;
+  }
+  .lp-benefits__pill {
+    display: inline-block;
+    padding: 0 14px 2px;
+    margin-left: 4px;
+    background: #F0C24A; color: #0B0B0B;
+    border-radius: 14px;
+    line-height: 1;
+    transform: translateY(2px);
+  }
+
+  .lp-benefits__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .lp-benefit {
+    position: relative;
+    padding: 24px 22px 24px 22px;
+    background: #FFFFFF;
+    border-radius: 22px;
+    border: 1px solid rgba(11,11,11,0.06);
+  }
+  .lp-benefit__num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: #3429D2; color: #FFFFFF;
+    font-family: 'Onest', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+  }
+  .lp-benefit__lead {
+    margin: 0 0 8px;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.25;
+    color: #0B0B0B;
+  }
+  .lp-benefit__desc {
+    margin: 0;
+    font-size: 15px; font-weight: 400;
+    color: #4A4036;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  /* Окраска номеров в стиле «Голубых фишек» — разнообразие в палитре */
+  .lp-benefit--02 .lp-benefit__num { background: #0B0B0B; }
+  .lp-benefit--03 .lp-benefit__num { background: #F0C24A; color: #0B0B0B; }
+  .lp-benefit--04 .lp-benefit__num { background: #0B0B0B; }
+  .lp-benefit--05 .lp-benefit__num { background: #3429D2; }
+
+  /* Tablet */
+  @media (min-width: 720px) {
+    .lp-section.lp-benefits { padding: 72px 40px; }
+    .lp-benefits__title { font-size: 56px; }
+    .lp-benefits__grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .lp-benefit__lead { font-size: 20px; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .lp-section.lp-benefits { padding: 96px 60px; }
+    .lp-benefits__title { font-size: 72px; margin-bottom: 44px; }
+    .lp-benefits__pill { padding: 0 22px 4px; border-radius: 20px; transform: translateY(4px); }
+    .lp-benefit { padding: 28px 26px; }
+    .lp-benefit__lead { font-size: 22px; }
+    .lp-benefit__desc { font-size: 16px; }
+  }
+</style>
