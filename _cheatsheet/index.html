@@ -37,7 +37,7 @@
     width: 297mm;
     height: 210mm;
     margin: 0 auto;
-    padding: 9mm 13mm;
+    padding: 7mm 11mm;
     background: var(--bg);
     page-break-after: always;
     page-break-inside: avoid;
@@ -263,7 +263,14 @@
   .mults-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 3mm;
+    gap: 4mm;
+  }
+  .mults-grid--six { grid-template-rows: 1fr 1fr; }
+  .mults-grid--three {
+    grid-template-columns: 1fr 1fr 1fr 1.1fr;
+    grid-template-rows: 1fr;
+    gap: 4mm;
+    align-items: stretch;
   }
   .mult-card {
     background: var(--bg-card);
@@ -273,6 +280,26 @@
     display: flex; flex-direction: column; gap: 2mm;
     min-height: 0;
   }
+  .decision-card {
+    background: var(--bg-dark);
+    color: #F1ECE0;
+    border-radius: 12px;
+    padding: 5mm;
+    display: flex; flex-direction: column; gap: 3mm;
+  }
+  .decision-card .dc-title {
+    font-size: 16px; font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 1mm;
+  }
+  .decision-card .dc-q {
+    background: rgba(255,255,255,0.06);
+    padding: 7px 10px; border-radius: 8px;
+    font-size: 15px; line-height: 1.4;
+    color: #F1ECE0;
+  }
+  .decision-card .dc-q b { color: var(--yellow); font-weight: 700; }
+  .decision-card .dc-q .arrow { color: var(--yellow); font-weight: 800; margin: 0 4px; }
   .mult-head {
     display: flex; align-items: baseline; justify-content: space-between;
     gap: 8px;
@@ -284,18 +311,18 @@
     color: var(--blue);
   }
   .mult-tag {
-    padding: 2px 7px; border-radius: 999px;
-    font-size: 9px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
     letter-spacing: 0.04em; text-transform: uppercase;
     background: rgba(52,41,210,0.10); color: var(--blue);
   }
-  .mult-tag--effic { background: rgba(123,192,151,0.18); color: #1F6E44; }
-  .mult-tag--debt  { background: rgba(217,122,110,0.18); color: #8A2920; }
-  .mult-tag--div   { background: rgba(240,194,74,0.22); color: #6E5400; }
+  .mult-tag--effic { background: rgba(123,192,151,0.20); color: #1F6E44; }
+  .mult-tag--debt  { background: rgba(217,122,110,0.20); color: #8A2920; }
+  .mult-tag--div   { background: rgba(240,194,74,0.24); color: #6E5400; }
 
   .mult-q {
-    font-size: 11.5px; font-weight: 700;
-    color: var(--text); line-height: 1.3;
+    font-size: 15px; font-weight: 700;
+    color: var(--text); line-height: 1.28;
     letter-spacing: -0.005em;
   }
   .mult-q::before {
@@ -305,40 +332,40 @@
 
   .mult-formula {
     background: rgba(11,11,11,0.04);
-    border-radius: 7px;
-    padding: 5px 8px;
-    font-size: 10.5px;
-    line-height: 1.35;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 15px;
+    line-height: 1.4;
     color: var(--text-soft);
   }
   .mult-formula b { color: var(--text); font-weight: 700; }
   .mult-formula .src {
     display: inline-block;
-    font-size: 9px; font-weight: 600;
+    font-size: 11px; font-weight: 600;
     color: var(--muted);
     margin-left: 3px;
   }
 
   .mult-trap {
-    background: rgba(240,194,74,0.20);
+    background: rgba(240,194,74,0.22);
     border-left: 3px solid var(--yellow);
-    border-radius: 0 7px 7px 0;
-    padding: 5px 8px;
-    font-size: 10.5px; line-height: 1.38;
+    border-radius: 0 8px 8px 0;
+    padding: 7px 10px;
+    font-size: 15px; line-height: 1.4;
     color: var(--text);
   }
   .mult-trap::before {
     content: '⚠ Ловушка ';
-    font-weight: 800; font-size: 9.5px;
+    font-weight: 800; font-size: 11px;
     color: #8A6500;
     letter-spacing: 0.04em; text-transform: uppercase;
-    margin-right: 4px;
+    margin-right: 5px;
   }
 
   .mult-no {
-    font-size: 10px; line-height: 1.38;
+    font-size: 15px; line-height: 1.4;
     color: var(--muted);
-    padding-top: 3px;
+    padding-top: 5px;
     border-top: 1px dashed rgba(11,11,11,0.10);
   }
   .mult-no::before {
@@ -390,7 +417,7 @@
     </div>
     <div class="head-right">
       <span class="pill-eyebrow">Шпаргалка</span>
-      <span class="page-no">01 / 02</span>
+      <span class="page-no">01 / 03</span>
     </div>
   </header>
 
@@ -607,18 +634,18 @@
     </div>
     <div class="head-right">
       <span class="pill-eyebrow">Шпаргалка</span>
-      <span class="page-no">02 / 02</span>
+      <span class="page-no">02 / 03</span>
     </div>
   </header>
 
   <h1 class="title">
-    Карта <span class="pill pill--yellow">9 мультипликаторов</span>
+    Карта <span class="pill pill--yellow">мультипликаторов</span>
   </h1>
   <p class="subtitle">
-    Каждая плитка — один показатель. Сверху: <b style="color:var(--text);">какой вопрос</b> отвечает. Ниже: формула с явными источниками. Жёлтое — главная ловушка. Внизу — когда показатель не работает.
+    Каждая плитка — один показатель. Сверху: <b style="color:var(--text);">какой вопрос</b> отвечает. Ниже: формула с явными источниками. Жёлтое — главная ловушка. Внизу — когда не работает.
   </p>
 
-  <div class="mults-grid">
+  <div class="mults-grid mults-grid--six">
 
     <!-- 1. P/E -->
     <article class="mult-card">
@@ -626,14 +653,14 @@
         <div class="mult-key">P/E</div>
         <div class="mult-tag">Оценка</div>
       </div>
-      <div class="mult-q">За сколько лет компания окупится для акционера на текущей прибыли?</div>
+      <div class="mult-q">За сколько лет компания окупится для акционера?</div>
       <div class="mult-formula">
-        <b>Цена акции</b> <span class="src">биржа</span> ÷ <b>Чистая прибыль на акцию</b> <span class="src">EPS, отчёт</span>
+        <b>Цена акции</b> ÷ <b>Чистая прибыль на акцию (EPS)</b>
       </div>
       <div class="mult-trap">
-        Берётся именно <b>чистая</b> прибыль, не операционная и не EBITDA. На неё ученики чаще всего «промахиваются».
+        Берётся именно <b>чистая</b> прибыль — не операционная, не EBITDA.
       </div>
-      <div class="mult-no">Не работает, если прибыль отрицательная (убыток) или одноразовая (продажа актива)</div>
+      <div class="mult-no">Не работает при убытке или разовой прибыли</div>
     </article>
 
     <!-- 2. P/B -->
@@ -642,14 +669,14 @@
         <div class="mult-key">P/B</div>
         <div class="mult-tag">Оценка</div>
       </div>
-      <div class="mult-q">Сколько мы платим за рубль чистых активов компании?</div>
+      <div class="mult-q">Сколько мы платим за рубль чистых активов?</div>
       <div class="mult-formula">
-        <b>Цена акции</b> <span class="src">биржа</span> ÷ <b>Балансовая стоимость на акцию</b> <span class="src">= Собственный капитал ÷ кол-во акций</span>
+        <b>Цена акции</b> ÷ <b>Собственный капитал на акцию</b>
       </div>
       <div class="mult-trap">
-        В знаменателе — <b>собственный капитал</b> (он же чистые активы), а <b>не</b> общие активы из строчки «Итого активы».
+        В знаменателе — <b>собственный капитал</b> (чистые активы), а не общие активы.
       </div>
-      <div class="mult-no">Малоприменим для IT и услуг — у них главные активы (бренд, код, команда) на балансе не отражены</div>
+      <div class="mult-no">Не для IT — у них активы не на балансе</div>
     </article>
 
     <!-- 3. P/S -->
@@ -658,14 +685,14 @@
         <div class="mult-key">P/S</div>
         <div class="mult-tag">Оценка</div>
       </div>
-      <div class="mult-q">Сколько мы платим за рубль выручки компании?</div>
+      <div class="mult-q">Сколько мы платим за рубль выручки?</div>
       <div class="mult-formula">
-        <b>Капитализация</b> <span class="src">биржа × кол-во акций</span> ÷ <b>Выручка</b> <span class="src">отчёт о P&L</span>
+        <b>Капитализация</b> ÷ <b>Выручка</b>
       </div>
       <div class="mult-trap">
-        Выручка — это <b>верхняя</b> строка отчёта, до всех вычетов. Не путать с прибылью.
+        Выручка — это <b>верхняя</b> строка отчёта, до всех вычетов.
       </div>
-      <div class="mult-no">Не сравнивай P/S между разными отраслями — у ритейла он всегда низкий, у софта высокий</div>
+      <div class="mult-no">Не сравнивай между отраслями — у ритейла всегда низкий</div>
     </article>
 
     <!-- 4. EV/EBITDA -->
@@ -674,14 +701,14 @@
         <div class="mult-key">EV/EBITDA</div>
         <div class="mult-tag">Оценка</div>
       </div>
-      <div class="mult-q">За сколько лет окупится <b>весь бизнес</b> (а не только доля акционера)?</div>
+      <div class="mult-q">За сколько лет окупится <b>весь бизнес</b>?</div>
       <div class="mult-formula">
-        <b>EV</b> = Капа <b>+ Долг − Кэш</b> ÷ <b>EBITDA</b> <span class="src">опер. прибыль + амортизация</span>
+        <b>EV</b> (Капа + Долг − Кэш) ÷ <b>EBITDA</b>
       </div>
       <div class="mult-trap">
-        EV — это «<b>сколько стоит бизнес целиком</b>», поэтому к капитализации прибавляем долг (он перейдёт к покупателю) и вычитаем деньги (они вернутся).
+        К капитализации <b>+ долг</b> (перейдёт покупателю) и <b>− кэш</b> (вернётся).
       </div>
-      <div class="mult-no">Не используется для банков (у них долг — это сырьё, не нагрузка)</div>
+      <div class="mult-no">Не используется для банков</div>
     </article>
 
     <!-- 5. ROE -->
@@ -690,14 +717,14 @@
         <div class="mult-key">ROE</div>
         <div class="mult-tag mult-tag--effic">Эффективность</div>
       </div>
-      <div class="mult-q">Сколько копеек прибыли компания делает на рубль капитала акционеров?</div>
+      <div class="mult-q">Сколько прибыли на рубль капитала акционеров?</div>
       <div class="mult-formula">
-        <b>Чистая прибыль</b> ÷ <b>Средний собственный капитал</b> <span class="src">(на начало + на конец года) ÷ 2</span>
+        <b>Чистая прибыль</b> ÷ <b>Средний собственный капитал</b>
       </div>
       <div class="mult-trap">
-        Знаменатель — <b>капитал</b> (чистые активы), не общие активы. Если взять активы — получишь ROA, не ROE.
+        Знаменатель — <b>капитал</b>, не общие активы. Иначе получишь ROA.
       </div>
-      <div class="mult-no">Высокий ROE может быть из-за высокого долга, а не из-за эффективности — смотри одновременно Долг/EBITDA</div>
+      <div class="mult-no">Высокий ROE может быть из-за долга — смотри одновременно Долг/EBITDA</div>
     </article>
 
     <!-- 6. ROA -->
@@ -706,15 +733,47 @@
         <div class="mult-key">ROA</div>
         <div class="mult-tag mult-tag--effic">Эффективность</div>
       </div>
-      <div class="mult-q">Сколько прибыли компания делает на каждый рубль <b>всех</b> активов?</div>
+      <div class="mult-q">Сколько прибыли на каждый рубль <b>всех</b> активов?</div>
       <div class="mult-formula">
-        <b>Чистая прибыль</b> ÷ <b>Средние общие активы</b> <span class="src">(на начало + на конец года) ÷ 2</span>
+        <b>Чистая прибыль</b> ÷ <b>Средние общие активы</b>
       </div>
       <div class="mult-trap">
-        Здесь — <b>общие</b> активы, включая то, что куплено на кредит. В отличие от ROE, ROA «не любит» долговую нагрузку.
+        Здесь — <b>общие</b> активы, включая купленное в кредит.
       </div>
-      <div class="mult-no">Сравнивай только внутри отрасли: у банков ROA всегда 1–3%, у IT — 15–25%, это разные модели</div>
+      <div class="mult-no">У банков ROA 1–3%, у IT — 15–25% — сравнивай внутри отрасли</div>
     </article>
+
+  </div>
+
+  <div class="foot">
+    <span>Продолжение на следующем листе → долг и дивиденды</span>
+    <span>v 1.0 · 2026</span>
+  </div>
+
+</section>
+
+
+<!-- ═══════════ PAGE 3 — Дополнения + дерево решений ═══════════ -->
+<section class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">₽</div>
+      <div class="brand-name">Академия «Инвестиции просто»</div>
+    </div>
+    <div class="head-right">
+      <span class="pill-eyebrow">Шпаргалка</span>
+      <span class="page-no">03 / 03</span>
+    </div>
+  </header>
+
+  <h1 class="title">
+    Долг, маржа <span class="pill pill--yellow">и дивиденды</span>
+  </h1>
+  <p class="subtitle">
+    Эти три показателя смотрят не на оценку и не на эффективность, а на <b style="color:var(--text);">риск</b> и <b style="color:var(--text);">политику</b> компании. Справа — дерево решений: какой показатель брать для какого вопроса.
+  </p>
+
+  <div class="mults-grid mults-grid--three">
 
     <!-- 7. Маржа EBITDA -->
     <article class="mult-card">
@@ -759,9 +818,18 @@
         <b>Дивиденды за год</b> <span class="src">всего, не на акцию</span> ÷ <b>Чистая прибыль</b> × 100%
       </div>
       <div class="mult-trap">
-        Если Payout > 100% — компания платит больше, чем заработала. Это не подарок, а сигнал: дивиденды из накоплений или долгов, надолго не хватит.
+        Если Payout > 100% — компания платит больше, чем заработала. Дивиденды из накоплений или долгов — надолго не хватит.
       </div>
-      <div class="mult-no">У растущих компаний Payout часто 0% — они реинвестируют прибыль; это не «жадность», а стратегия</div>
+      <div class="mult-no">У растущих компаний Payout часто 0% — это стратегия реинвестирования</div>
+    </article>
+
+    <!-- Decision tree -->
+    <article class="decision-card">
+      <div class="dc-title">Если хочу понять…</div>
+      <div class="dc-q"><b>Дорогая ли</b> компания?<br><span class="arrow">→</span> P/E, P/B, P/S, EV/EBITDA</div>
+      <div class="dc-q"><b>Эффективно</b> ли работает?<br><span class="arrow">→</span> ROE, ROA, Маржа EBITDA</div>
+      <div class="dc-q"><b>Закредитована</b> ли?<br><span class="arrow">→</span> Долг/EBITDA</div>
+      <div class="dc-q"><b>Платит</b> ли дивиденды и сколько?<br><span class="arrow">→</span> Payout, Дивдоходность</div>
     </article>
 
   </div>
