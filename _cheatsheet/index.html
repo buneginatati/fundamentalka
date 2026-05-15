@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка · Отчётность МСФО и мультипликаторы</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+  :root {
+    --bg: #F1ECE0;
+    --bg-card: #FFFFFF;
+    --bg-dark: #0B0B0B;
+    --text: #0B0B0B;
+    --text-soft: #4A4036;
+    --muted: #6B5F52;
+    --line: rgba(11,11,11,0.10);
+    --blue: #3429D2;
+    --blue-deep: #1F18A0;
+    --yellow: #F0C24A;
+    --mint: #C7E5C4;
+    --coral: #F8B5A6;
+    --lavender: #D4CCFF;
+  }
+
+  @page { size: A4 landscape; margin: 0; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #E8E2D2;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page {
+    width: 297mm;
+    height: 210mm;
+    margin: 0 auto;
+    padding: 9mm 13mm;
+    background: var(--bg);
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+    position: relative;
+    color: var(--text);
+    font-feature-settings: 'tnum' on;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ════════════ Header ════════════ */
+  .head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4mm;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--blue); color: #FFF;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; line-height: 1;
+  }
+  .brand-name {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .head-right {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; font-weight: 600;
+    color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .pill-eyebrow {
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--blue); color: #FFF;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .page-no {
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(11,11,11,0.08); color: var(--text-soft);
+    font-family: 'Onest', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ════════════ Title ════════════ */
+  .title {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    margin-bottom: 3mm;
+  }
+  .title .pill {
+    display: inline-block;
+    padding: 0 12px 2px;
+    background: var(--blue); color: #FFF;
+    border-radius: 12px;
+    line-height: 1;
+    transform: translateY(2px);
+  }
+  .title .pill--yellow { background: var(--yellow); color: var(--text); }
+  .subtitle {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-soft); line-height: 1.4;
+    max-width: 220mm;
+    margin-bottom: 4mm;
+  }
+
+  /* ════════════ Page 1 — Анатомия ════════════ */
+  .anat-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 5mm;
+  }
+
+  .panel {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    padding: 4mm 5mm;
+    position: relative;
+  }
+  .panel-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3mm;
+  }
+  .panel-title .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 6px;
+    background: var(--blue); color: #FFF;
+    font-size: 10px; font-weight: 700;
+    margin-right: 6px;
+  }
+
+  /* Waterfall of profit levels */
+  .waterfall { display: flex; flex-direction: column; gap: 2px; }
+  .wf-row {
+    display: grid;
+    grid-template-columns: 10mm 1fr 55mm;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 0;
+  }
+  .wf-row + .wf-row { border-top: 1px dashed rgba(11,11,11,0.08); }
+  .wf-op {
+    font-family: 'Onest', sans-serif;
+    font-size: 12px; font-weight: 700;
+    text-align: center;
+    color: var(--muted);
+  }
+  .wf-op.minus { color: #C75050; }
+  .wf-op.plus { color: #2E8B57; }
+  .wf-op.eq { color: var(--blue); }
+
+  .wf-name {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .wf-name .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .wf-uses {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .multi-pill {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 999px;
+    font-family: 'Onest', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.01em;
+    background: rgba(11,11,11,0.06);
+    color: var(--text);
+  }
+  .multi-pill--blue   { background: var(--blue); color: #FFF; }
+  .multi-pill--mint   { background: var(--mint); color: #0E2A1C; }
+  .multi-pill--yellow { background: var(--yellow); color: var(--text); }
+  .multi-pill--coral  { background: var(--coral); color: var(--text); }
+  .multi-pill--lav    { background: var(--lavender); color: #1A0F3D; }
+
+  .wf-row--highlight {
+    background: rgba(52,41,210,0.06);
+    border-radius: 6px;
+    margin: 0 -4px;
+    padding: 6px 4px;
+  }
+  .wf-row--total {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 2px solid var(--text) !important;
+  }
+  .wf-row--total .wf-name { font-weight: 800; font-size: 15px; }
+
+  /* Balance side */
+  .balance { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 2mm; }
+  .balance-col-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--muted);
+    padding-bottom: 4px; margin-bottom: 5px;
+    border-bottom: 1px solid var(--line);
+  }
+  .bs-item {
+    padding: 6px 8px; border-radius: 8px;
+    background: rgba(11,11,11,0.04);
+    margin-bottom: 5px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .bs-item-name { font-size: 12px; font-weight: 700; }
+  .bs-item-feed { display: flex; flex-wrap: wrap; gap: 3px; }
+  .bs-item-feed .multi-pill { font-size: 9px; padding: 1px 6px; }
+  .bs-item--key {
+    background: var(--yellow);
+    color: var(--text);
+  }
+  .bs-item--debt {
+    background: var(--mint);
+    color: #0E2A1C;
+  }
+  .bs-item--equity {
+    background: var(--blue); color: #FFF;
+  }
+  .bs-item--equity .bs-item-feed .multi-pill { background: rgba(255,255,255,0.22); color: #FFF; }
+
+  /* Bottom callout strip */
+  .takeaway {
+    margin-top: 4mm;
+    background: var(--bg-dark); color: #F1ECE0;
+    padding: 4mm 6mm;
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5mm;
+  }
+  .ta-item { }
+  .ta-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 6px;
+    background: var(--yellow); color: var(--text);
+    font-weight: 800; font-size: 10px;
+    margin-bottom: 4px;
+  }
+  .ta-lead {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.22;
+    margin-bottom: 3px;
+  }
+  .ta-body {
+    font-size: 10.5px; line-height: 1.4;
+    color: rgba(241,236,224,0.78);
+  }
+  .ta-body b { color: var(--yellow); font-weight: 700; }
+
+  /* ════════════ Page 2 — Карта мультипликаторов ════════════ */
+  .mults-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3mm;
+  }
+  .mult-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    padding: 3.5mm 4mm 3.5mm;
+    display: flex; flex-direction: column; gap: 2mm;
+    min-height: 0;
+  }
+  .mult-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 8px;
+  }
+  .mult-key {
+    font-family: 'Onest', sans-serif;
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1;
+    color: var(--blue);
+  }
+  .mult-tag {
+    padding: 2px 7px; border-radius: 999px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(52,41,210,0.10); color: var(--blue);
+  }
+  .mult-tag--effic { background: rgba(123,192,151,0.18); color: #1F6E44; }
+  .mult-tag--debt  { background: rgba(217,122,110,0.18); color: #8A2920; }
+  .mult-tag--div   { background: rgba(240,194,74,0.22); color: #6E5400; }
+
+  .mult-q {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--text); line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .mult-q::before {
+    content: '? ';
+    color: var(--blue); font-weight: 800;
+  }
+
+  .mult-formula {
+    background: rgba(11,11,11,0.04);
+    border-radius: 7px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: var(--text-soft);
+  }
+  .mult-formula b { color: var(--text); font-weight: 700; }
+  .mult-formula .src {
+    display: inline-block;
+    font-size: 9px; font-weight: 600;
+    color: var(--muted);
+    margin-left: 3px;
+  }
+
+  .mult-trap {
+    background: rgba(240,194,74,0.20);
+    border-left: 3px solid var(--yellow);
+    border-radius: 0 7px 7px 0;
+    padding: 5px 8px;
+    font-size: 10.5px; line-height: 1.38;
+    color: var(--text);
+  }
+  .mult-trap::before {
+    content: '⚠ Ловушка ';
+    font-weight: 800; font-size: 9.5px;
+    color: #8A6500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .mult-no {
+    font-size: 10px; line-height: 1.38;
+    color: var(--muted);
+    padding-top: 3px;
+    border-top: 1px dashed rgba(11,11,11,0.10);
+  }
+  .mult-no::before {
+    content: '×';
+    color: #C75050; font-weight: 800;
+    margin-right: 5px;
+  }
+
+  /* Footer hint */
+  .foot {
+    margin-top: 5mm;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; color: var(--muted);
+    letter-spacing: -0.005em;
+  }
+
+  /* Screen view tweaks (когда смотрят с телефона/ноута) */
+  @media screen and (max-width: 800px) {
+    .page {
+      width: 100%;
+      min-height: auto;
+      padding: 16px 16px 24px;
+    }
+    .anat-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .balance { grid-template-columns: 1fr; }
+    .mults-grid { grid-template-columns: 1fr; }
+    .takeaway { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
+    .title { font-size: 32px; }
+    .wf-row { grid-template-columns: 24px 1fr; }
+    .wf-uses {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+      padding-left: 30px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ PAGE 1 — Анатомия отчётности ═══════════ -->
+<section class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">₽</div>
+      <div class="brand-name">Академия «Инвестиции просто»</div>
+    </div>
+    <div class="head-right">
+      <span class="pill-eyebrow">Шпаргалка</span>
+      <span class="page-no">01 / 02</span>
+    </div>
+  </header>
+
+  <h1 class="title">
+    Анатомия<br>
+    <span class="pill">отчётности</span> МСФО
+  </h1>
+  <p class="subtitle">
+    Карта строк отчёта о прибылях и убытках и баланса. Цветом помечено, какой мультипликатор берёт эту строку. <b style="color:var(--text);font-weight:700;">Принцип:</b> сначала задай вопрос о бизнесе, потом выбирай строку — а не наоборот.
+  </p>
+
+  <div class="anat-grid">
+
+    <!-- LEFT: P&L Waterfall -->
+    <div class="panel">
+      <div class="panel-title"><span class="num">1</span>Отчёт о прибылях и убытках · «Каскад» прибыли</div>
+
+      <div class="waterfall">
+
+        <div class="wf-row">
+          <div class="wf-op">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: var(--yellow);"></span>
+            Выручка
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill multi-pill--yellow">P/S</span>
+            <span class="multi-pill">Маржа</span>
+          </div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op minus">−</div>
+          <div class="wf-name" style="color: var(--muted);">Себестоимость</div>
+          <div class="wf-uses"></div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op eq">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: rgba(11,11,11,0.25);"></span>
+            Валовая прибыль
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill" style="opacity:0.5;">редко используется</span>
+          </div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op minus">−</div>
+          <div class="wf-name" style="color: var(--muted);">Коммерческие и адм. расходы</div>
+          <div class="wf-uses"></div>
+        </div>
+
+        <div class="wf-row wf-row--highlight">
+          <div class="wf-op eq">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: var(--blue);"></span>
+            Операционная прибыль (EBIT)
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill multi-pill--blue">Опер. маржа</span>
+          </div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op plus">+</div>
+          <div class="wf-name" style="color: var(--muted);">Амортизация (Depreciation + Amortization)</div>
+          <div class="wf-uses"></div>
+        </div>
+
+        <div class="wf-row wf-row--highlight">
+          <div class="wf-op eq">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: #7BC097;"></span>
+            EBITDA
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill multi-pill--mint">EV/EBITDA</span>
+            <span class="multi-pill multi-pill--mint">Маржа EBITDA</span>
+            <span class="multi-pill multi-pill--mint">Долг/EBITDA</span>
+          </div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op minus">−</div>
+          <div class="wf-name" style="color: var(--muted);">Проценты по кредитам</div>
+          <div class="wf-uses"></div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op eq">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: rgba(11,11,11,0.25);"></span>
+            Прибыль до налогов
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill" style="opacity:0.5;">используется редко</span>
+          </div>
+        </div>
+
+        <div class="wf-row">
+          <div class="wf-op minus">−</div>
+          <div class="wf-name" style="color: var(--muted);">Налог на прибыль</div>
+          <div class="wf-uses"></div>
+        </div>
+
+        <div class="wf-row wf-row--total">
+          <div class="wf-op eq">=</div>
+          <div class="wf-name">
+            <span class="dot" style="background: var(--blue);"></span>
+            Чистая прибыль
+          </div>
+          <div class="wf-uses">
+            <span class="multi-pill multi-pill--blue">P/E</span>
+            <span class="multi-pill multi-pill--blue">ROE</span>
+            <span class="multi-pill multi-pill--blue">ROA</span>
+            <span class="multi-pill multi-pill--blue">Payout</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Balance Sheet -->
+    <div class="panel">
+      <div class="panel-title"><span class="num">2</span>Баланс · «Лестница» активов</div>
+
+      <div class="balance">
+        <div>
+          <div class="balance-col-title">Активы</div>
+
+          <div class="bs-item bs-item--key">
+            <div class="bs-item-name">Общие активы</div>
+            <div class="bs-item-feed">
+              <span class="multi-pill multi-pill--coral">ROA</span>
+            </div>
+          </div>
+
+          <div class="bs-item">
+            <div class="bs-item-name" style="color:var(--muted);">в т.ч. оборотные</div>
+          </div>
+          <div class="bs-item">
+            <div class="bs-item-name" style="color:var(--muted);">в т.ч. внеоборотные</div>
+          </div>
+          <div class="bs-item" style="background: var(--mint); color:#0E2A1C;">
+            <div class="bs-item-name">Денежные средства</div>
+            <div class="bs-item-feed">
+              <span class="multi-pill multi-pill--mint" style="background:#FFFFFF;">EV (вычитаются)</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="balance-col-title">Обязательства + Капитал</div>
+
+          <div class="bs-item bs-item--debt">
+            <div class="bs-item-name">Долг (краткосрочный + долгосрочный)</div>
+            <div class="bs-item-feed">
+              <span class="multi-pill multi-pill--mint" style="background:#FFFFFF;">EV (плюсуется)</span>
+              <span class="multi-pill multi-pill--mint" style="background:#FFFFFF;">Долг/EBITDA</span>
+            </div>
+          </div>
+
+          <div class="bs-item">
+            <div class="bs-item-name" style="color:var(--muted);">прочие обязательства</div>
+          </div>
+
+          <div class="bs-item bs-item--equity">
+            <div class="bs-item-name">Собственный капитал<br><span style="font-size:10px;font-weight:500;opacity:0.7;">= Чистые активы</span></div>
+            <div class="bs-item-feed">
+              <span class="multi-pill">P/B</span>
+              <span class="multi-pill">ROE (знаменатель)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top: 4mm; font-size: 11px; color: var(--muted); line-height: 1.45;">
+        <b style="color:var(--text);">Чистые активы</b> ≠ «Активы минус что-то». Это синоним <b style="color:var(--text);">собственного капитала</b> акционеров. В балансе: активы = обязательства + капитал, откуда капитал = активы − обязательства.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Bottom — 3 key takeaways -->
+  <div class="takeaway">
+    <div class="ta-item">
+      <div class="ta-num">1</div>
+      <div class="ta-lead">Прибыль — это не одно число</div>
+      <div class="ta-body">У одной компании <b>пять разных</b> прибылей. Каждая отвечает на свой вопрос. P/E — про <b>чистую</b>, EV/EBITDA — про <b>EBITDA</b>, маржа — про <b>операционную</b>.</div>
+    </div>
+    <div class="ta-item">
+      <div class="ta-num">2</div>
+      <div class="ta-lead">«Активы» и «капитал» — не синонимы</div>
+      <div class="ta-body">Активы — всё, чем владеет бизнес (вкл. на кредит). Капитал — то, что осталось бы акционерам, если погасить все долги. <b>P/B и ROE</b> — про капитал, <b>ROA</b> — про активы.</div>
+    </div>
+    <div class="ta-item">
+      <div class="ta-num">3</div>
+      <div class="ta-lead">Сначала вопрос — потом строка</div>
+      <div class="ta-body">«Эффективен ли бизнес операционно?» → операционная маржа. «Сколько лет окупится для меня?» → P/E на <b>чистой</b>. Выбор показателя — это <b>следствие</b> вопроса.</div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════ PAGE 2 — Карта мультипликаторов ═══════════ -->
+<section class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">₽</div>
+      <div class="brand-name">Академия «Инвестиции просто»</div>
+    </div>
+    <div class="head-right">
+      <span class="pill-eyebrow">Шпаргалка</span>
+      <span class="page-no">02 / 02</span>
+    </div>
+  </header>
+
+  <h1 class="title">
+    Карта <span class="pill pill--yellow">9 мультипликаторов</span>
+  </h1>
+  <p class="subtitle">
+    Каждая плитка — один показатель. Сверху: <b style="color:var(--text);">какой вопрос</b> отвечает. Ниже: формула с явными источниками. Жёлтое — главная ловушка. Внизу — когда показатель не работает.
+  </p>
+
+  <div class="mults-grid">
+
+    <!-- 1. P/E -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">P/E</div>
+        <div class="mult-tag">Оценка</div>
+      </div>
+      <div class="mult-q">За сколько лет компания окупится для акционера на текущей прибыли?</div>
+      <div class="mult-formula">
+        <b>Цена акции</b> <span class="src">биржа</span> ÷ <b>Чистая прибыль на акцию</b> <span class="src">EPS, отчёт</span>
+      </div>
+      <div class="mult-trap">
+        Берётся именно <b>чистая</b> прибыль, не операционная и не EBITDA. На неё ученики чаще всего «промахиваются».
+      </div>
+      <div class="mult-no">Не работает, если прибыль отрицательная (убыток) или одноразовая (продажа актива)</div>
+    </article>
+
+    <!-- 2. P/B -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">P/B</div>
+        <div class="mult-tag">Оценка</div>
+      </div>
+      <div class="mult-q">Сколько мы платим за рубль чистых активов компании?</div>
+      <div class="mult-formula">
+        <b>Цена акции</b> <span class="src">биржа</span> ÷ <b>Балансовая стоимость на акцию</b> <span class="src">= Собственный капитал ÷ кол-во акций</span>
+      </div>
+      <div class="mult-trap">
+        В знаменателе — <b>собственный капитал</b> (он же чистые активы), а <b>не</b> общие активы из строчки «Итого активы».
+      </div>
+      <div class="mult-no">Малоприменим для IT и услуг — у них главные активы (бренд, код, команда) на балансе не отражены</div>
+    </article>
+
+    <!-- 3. P/S -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">P/S</div>
+        <div class="mult-tag">Оценка</div>
+      </div>
+      <div class="mult-q">Сколько мы платим за рубль выручки компании?</div>
+      <div class="mult-formula">
+        <b>Капитализация</b> <span class="src">биржа × кол-во акций</span> ÷ <b>Выручка</b> <span class="src">отчёт о P&L</span>
+      </div>
+      <div class="mult-trap">
+        Выручка — это <b>верхняя</b> строка отчёта, до всех вычетов. Не путать с прибылью.
+      </div>
+      <div class="mult-no">Не сравнивай P/S между разными отраслями — у ритейла он всегда низкий, у софта высокий</div>
+    </article>
+
+    <!-- 4. EV/EBITDA -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">EV/EBITDA</div>
+        <div class="mult-tag">Оценка</div>
+      </div>
+      <div class="mult-q">За сколько лет окупится <b>весь бизнес</b> (а не только доля акционера)?</div>
+      <div class="mult-formula">
+        <b>EV</b> = Капа <b>+ Долг − Кэш</b> ÷ <b>EBITDA</b> <span class="src">опер. прибыль + амортизация</span>
+      </div>
+      <div class="mult-trap">
+        EV — это «<b>сколько стоит бизнес целиком</b>», поэтому к капитализации прибавляем долг (он перейдёт к покупателю) и вычитаем деньги (они вернутся).
+      </div>
+      <div class="mult-no">Не используется для банков (у них долг — это сырьё, не нагрузка)</div>
+    </article>
+
+    <!-- 5. ROE -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">ROE</div>
+        <div class="mult-tag mult-tag--effic">Эффективность</div>
+      </div>
+      <div class="mult-q">Сколько копеек прибыли компания делает на рубль капитала акционеров?</div>
+      <div class="mult-formula">
+        <b>Чистая прибыль</b> ÷ <b>Средний собственный капитал</b> <span class="src">(на начало + на конец года) ÷ 2</span>
+      </div>
+      <div class="mult-trap">
+        Знаменатель — <b>капитал</b> (чистые активы), не общие активы. Если взять активы — получишь ROA, не ROE.
+      </div>
+      <div class="mult-no">Высокий ROE может быть из-за высокого долга, а не из-за эффективности — смотри одновременно Долг/EBITDA</div>
+    </article>
+
+    <!-- 6. ROA -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">ROA</div>
+        <div class="mult-tag mult-tag--effic">Эффективность</div>
+      </div>
+      <div class="mult-q">Сколько прибыли компания делает на каждый рубль <b>всех</b> активов?</div>
+      <div class="mult-formula">
+        <b>Чистая прибыль</b> ÷ <b>Средние общие активы</b> <span class="src">(на начало + на конец года) ÷ 2</span>
+      </div>
+      <div class="mult-trap">
+        Здесь — <b>общие</b> активы, включая то, что куплено на кредит. В отличие от ROE, ROA «не любит» долговую нагрузку.
+      </div>
+      <div class="mult-no">Сравнивай только внутри отрасли: у банков ROA всегда 1–3%, у IT — 15–25%, это разные модели</div>
+    </article>
+
+    <!-- 7. Маржа EBITDA -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">Маржа<br>EBITDA</div>
+        <div class="mult-tag mult-tag--effic">Эффективность</div>
+      </div>
+      <div class="mult-q">Какая доля выручки превращается в операционную «энергию» бизнеса?</div>
+      <div class="mult-formula">
+        <b>EBITDA</b> ÷ <b>Выручка</b> × 100% <span class="src">обе строки в P&L</span>
+      </div>
+      <div class="mult-trap">
+        Числитель и знаменатель — <b>из одного периода</b>. Не сравнивай EBITDA 2024 с выручкой 2023.
+      </div>
+      <div class="mult-no">У банков EBITDA не считают — у них своя «банковская» маржа (ЧПМ)</div>
+    </article>
+
+    <!-- 8. Долг / EBITDA -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">Долг<br>EBITDA</div>
+        <div class="mult-tag mult-tag--debt">Долговая нагрузка</div>
+      </div>
+      <div class="mult-q">За сколько лет EBITDA компания смогла бы погасить весь свой чистый долг?</div>
+      <div class="mult-formula">
+        <b>Чистый долг</b> <span class="src">= Долг − Кэш</span> ÷ <b>EBITDA</b>
+      </div>
+      <div class="mult-trap">
+        Берётся <b>чистый</b> долг, не общий. Если у компании 100 млрд долга и 50 млрд кэша — реальный долг 50 млрд.
+      </div>
+      <div class="mult-no">Меньше 2 — комфорт, 2–4 — норма для индустрии, выше 4 — красный флаг (исключения: банки, ЖКХ)</div>
+    </article>
+
+    <!-- 9. Payout -->
+    <article class="mult-card">
+      <div class="mult-head">
+        <div class="mult-key">Payout</div>
+        <div class="mult-tag mult-tag--div">Дивиденды</div>
+      </div>
+      <div class="mult-q">Какую долю чистой прибыли компания отдаёт акционерам в виде дивидендов?</div>
+      <div class="mult-formula">
+        <b>Дивиденды за год</b> <span class="src">всего, не на акцию</span> ÷ <b>Чистая прибыль</b> × 100%
+      </div>
+      <div class="mult-trap">
+        Если Payout > 100% — компания платит больше, чем заработала. Это не подарок, а сигнал: дивиденды из накоплений или долгов, надолго не хватит.
+      </div>
+      <div class="mult-no">У растущих компаний Payout часто 0% — они реинвестируют прибыль; это не «жадность», а стратегия</div>
+    </article>
+
+  </div>
+
+  <div class="foot">
+    <span>Сначала — вопрос о бизнесе. Затем — мультипликатор. И только потом — строка отчёта.</span>
+    <span>v 1.0 · 2026</span>
+  </div>
+
+</section>
+
+</body>
+</html>
