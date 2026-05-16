@@ -33,6 +33,9 @@
   #splashScreen .sp-title{color:#fff;font-size:30px;font-weight:800;margin-top:8px;line-height:1.15;}
   #splashScreen .sp-sub{color:#7FC8F8;font-size:13px;font-weight:600;margin-top:14px;letter-spacing:.04em;}
   #splashScreen .sp-hint{color:rgba(255,255,255,0.34);font-size:11px;margin-top:34px;}
+  .bond-cta{color:#2C7DB8;font-weight:700;white-space:nowrap;}
+  .bond-detail{padding:2px 12px 12px;}
+  .bond-wrap{border-bottom:1px solid rgba(0,0,0,0.05);}
 </style>
 <div id="splashScreen" onclick="hideSplash()">
   <div class="sp-inner">
@@ -2055,15 +2058,18 @@ function renderBondsList(bonds) {
   var related = bonds.filter(function(b) { return b._relatedTo; });
 
   function bondItemHtml(b) {
-    var url = BOND_CALC_URL + '?issuer=' + encodeURIComponent(b.secid);
+    var sid = escHtml(b.secid);
     var isin = b.isin ? ' · ISIN ' + escHtml(b.isin) : '';
     var rel = b._relatedTo ? '<span style="color:var(--muted);font-size:10px;font-weight:600;margin-left:6px;">' + escHtml(b._relatedTo).replace(/публичное акционерное общество\s*"?/i, '').replace(/[«»"]/g, '') + '</span>' : '';
-    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="moex-item" style="text-decoration:none; display:block;">'
+    return '<div class="bond-wrap">'
+      + '<div class="moex-item" style="cursor:pointer;" onclick="toggleBondFK(this,\'' + sid + '\')">'
       + '<span class="moex-item-name">' + escHtml(b.shortname || b.name || b.secid) + '</span>'
-      + '<span class="moex-item-ticker">' + escHtml(b.secid) + '</span>'
+      + '<span class="moex-item-ticker">' + sid + '</span>'
       + rel
-      + '<div class="moex-item-details">' + escHtml(b.name || '') + isin + ' &nbsp;→ открыть в Облигаторе</div>'
-      + '</a>';
+      + '<div class="moex-item-details">' + escHtml(b.name || '') + isin + ' &nbsp;<span class="bond-cta">▾ доходность и график</span></div>'
+      + '</div>'
+      + '<div class="bond-detail" id="bd-' + sid + '" style="display:none;"></div>'
+      + '</div>';
   }
 
   function listWithMore(items, hint) {
@@ -2086,6 +2092,129 @@ function renderBondsList(bonds) {
   html += listWithMore(direct);
   html += listWithMore(related, 'Связанные эмитенты группы');
   return html;
+}
+
+// ==================== ОБЛИГАЦИЯ В КАРТОЧКЕ (расчёт + график) ====================
+var BOND_FK_CHART = {};   // secid -> Chart
+var BOND_FK_PERIOD = {};  // secid -> code
+var BOND_FK_PERIODS = [
+  { code:'1M', label:'1 мес', days:30 },
+  { code:'6M', label:'6 мес', days:180 },
+  { code:'1Y', label:'1 год', days:365 },
+  { code:'MAX', label:'5 лет', days:365*5 },
+];
+
+function toggleBondFK(headerEl, sid) {
+  var d = document.getElementById('bd-' + sid);
+  if (!d) return;
+  var open = d.style.display === 'none';
+  d.style.display = open ? 'block' : 'none';
+  var cta = headerEl.querySelector('.bond-cta');
+  if (cta) cta.textContent = (open ? '▴' : '▾') + ' доходность и график';
+  if (open && !d.dataset.loaded) { d.dataset.loaded = '1'; loadBondFK(sid); }
+}
+
+function fkRow(label, val) {
+  if (val === null || val === undefined || val === '' || (typeof val === 'number' && isNaN(val))) return '';
+  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:13px;">'
+    + '<span style="color:var(--text-dim);">' + label + '</span><b style="font-family:var(--font-mono,monospace);">' + val + '</b></div>';
+}
+
+async function loadBondFK(sid) {
+  var d = document.getElementById('bd-' + sid);
+  d.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:10px 0;">Загружаю облигацию…</div>';
+  try {
+    var data = await moexFetch(MOEX_BASE + '/engines/stock/markets/bonds/securities/' + encodeURIComponent(sid) + '.json?iss.meta=off');
+    function row1(t) {
+      if (!data[t] || !data[t].data || !data[t].data.length) return {};
+      var c = data[t].columns, r = data[t].data[0], o = {};
+      c.forEach(function(k, i) { o[k] = r[i]; });
+      return o;
+    }
+    var s = row1('securities'), m = row1('marketdata');
+    var price = m.LAST || m.LCLOSEPRICE || m.MARKETPRICE || s.PREVLEGALCLOSEPRICE || s.PREVPRICE || s.PREVWAPRICE;
+    var ytm = m.YIELD || m.YIELDATPREVWAPRICE || s.YIELDATPREVWAPRICE;
+    var face = s.FACEVALUE, cur = s.FACEUNIT || '₽';
+    function n(v, suf) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + (suf || ''); }
+    var grid = ''
+      + fkRow('Цена', n(price, '% от номинала'))
+      + fkRow('Доходность к погашению', n(ytm, '%'))
+      + fkRow('Купон', (n(s.COUPONVALUE, ' ' + cur) || '—') + (s.COUPONPERCENT ? ' · ' + n(s.COUPONPERCENT, '%') : ''))
+      + fkRow('Накопленный купон (НКД)', n(s.ACCRUEDINT, ' ' + cur))
+      + fkRow('Номинал', n(face, ' ' + cur))
+      + fkRow('Погашение', s.MATDATE && s.MATDATE !== '0000-00-00' ? s.MATDATE : null)
+      + fkRow('Оферта', s.OFFERDATE && s.OFFERDATE !== '0000-00-00' ? s.OFFERDATE : null)
+      + fkRow('Следующий купон', s.NEXTCOUPON && s.NEXTCOUPON !== '0000-00-00' ? s.NEXTCOUPON : null);
+    BOND_FK_PERIOD[sid] = '1Y';
+    var btns = BOND_FK_PERIODS.map(function(p) {
+      return '<button class="chart-period-btn ' + (p.code === '1Y' ? 'active' : '') + '" onclick="event.stopPropagation();setBondFKPeriod(\'' + sid + '\',\'' + p.code + '\')">' + p.label + '</button>';
+    }).join('');
+    d.innerHTML = '<div style="padding:6px 0 2px;">' + (grid || '<div style="font-size:12px;color:var(--text-dim);">Биржевых данных по выпуску нет.</div>')
+      + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px;">' + btns + '</div>'
+      + '<div style="position:relative;height:170px;"><canvas id="bc-' + sid + '"></canvas></div>'
+      + '<div id="bcs-' + sid + '" style="font-size:11px;color:var(--text-dim);margin-top:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--font-mono,monospace);"></div></div>';
+    drawBondFKChart(sid);
+  } catch (e) {
+    d.innerHTML = '<div style="font-size:12px;color:var(--score-red,#B5524A);padding:10px 0;">Не удалось загрузить выпуск. Попробуй позже.</div>';
+    console.error('bond FK load fail', sid, e);
+  }
+}
+
+function setBondFKPeriod(sid, code) {
+  BOND_FK_PERIOD[sid] = code;
+  var d = document.getElementById('bd-' + sid);
+  d.querySelectorAll('.chart-period-btn').forEach(function(b) {
+    var p = BOND_FK_PERIODS.find(function(x) { return x.code === code; });
+    b.classList.toggle('active', !!p && b.textContent === p.label);
+  });
+  drawBondFKChart(sid);
+}
+
+async function drawBondFKChart(sid) {
+  var period = BOND_FK_PERIODS.find(function(p) { return p.code === (BOND_FK_PERIOD[sid] || '1Y'); }) || BOND_FK_PERIODS[2];
+  var from = new Date(Date.now() - period.days * 86400000).toISOString().slice(0, 10);
+  var interval = period.days <= 180 ? 24 : (period.days <= 1095 ? 7 : 31);
+  var statsEl = document.getElementById('bcs-' + sid);
+  if (statsEl) statsEl.textContent = 'Загружаю историю цены…';
+  try {
+    async function fetchC(iv) {
+      var dd = await moexFetch(MOEX_BASE + '/engines/stock/markets/bonds/securities/' + encodeURIComponent(sid)
+        + '/candles.json?from=' + from + '&interval=' + iv + '&iss.meta=off');
+      return (dd && dd.candles && dd.candles.data) ? dd.candles : { columns: [], data: [] };
+    }
+    var c = await fetchC(interval);
+    if (c.data.length === 0 && interval !== 24) c = await fetchC(24);
+    var iC = c.columns.indexOf('close'), iB = c.columns.indexOf('begin');
+    var labels = [], closes = [];
+    c.data.forEach(function(r) { var v = r[iC]; if (v != null) { labels.push(String(r[iB]).slice(0, 10)); closes.push(v); } });
+    var cv = document.getElementById('bc-' + sid);
+    if (!cv) return;
+    if (closes.length === 0) {
+      if (statsEl) statsEl.textContent = 'Нет биржевой истории котировок за период.';
+      if (BOND_FK_CHART[sid]) { BOND_FK_CHART[sid].destroy(); BOND_FK_CHART[sid] = null; }
+      return;
+    }
+    if (BOND_FK_CHART[sid]) BOND_FK_CHART[sid].destroy();
+    BOND_FK_CHART[sid] = new Chart(cv.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: [{ data: closes, borderColor: '#A8D5F0',
+        backgroundColor: 'rgba(168,213,240,0.12)', fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { displayColors: false, callbacks: { label: function(x) { return Number(x.raw).toFixed(2) + '%'; } } } },
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 9 } }, grid: { display: false } },
+          y: { ticks: { callback: function(v) { return v + '%'; }, font: { size: 9 } } } } }
+    });
+    var f = closes[0], l = closes[closes.length - 1];
+    var mn = Math.min.apply(null, closes), mx = Math.max.apply(null, closes);
+    var dp = f ? ((l - f) / f) * 100 : 0;
+    if (statsEl) statsEl.innerHTML = '<span>мин <b>' + mn.toFixed(2) + '%</b></span>'
+      + '<span>Δ ' + (dp >= 0 ? '+' : '') + dp.toFixed(2) + '%</span>'
+      + '<span>макс <b>' + mx.toFixed(2) + '%</b></span>';
+  } catch (e) {
+    if (statsEl) statsEl.textContent = 'Не удалось загрузить историю цены.';
+    console.error('bond FK chart fail', sid, e);
+  }
 }
 
 // ==================== СОБЫТИЯ ====================
