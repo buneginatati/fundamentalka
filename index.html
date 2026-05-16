@@ -18,90 +18,31 @@
 </head>
 <body>
 
-<!-- ════════════ ONBOARDING OVERLAY (показывается при первом визите) ════════════ -->
-<div class="onb-overlay" id="onbOverlay">
-  <div class="onb-inner">
-    <div class="onb-top">
-      <div class="header-brand">
-        <div class="header-logo">
-          <svg viewBox="0 0 20 20" fill="none">
-            <path d="M4 16 L4 4 L16 4 M4 10 L13 10 M10 16 L10 4" stroke="#0E1116" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <h1>Фундаменталка</h1>
-          <p>Анализ эмитента · Академия</p>
-        </div>
-      </div>
-      <div class="onb-counter"><span id="onbDone">0</span>/<span id="onbTotal">7</span></div>
+<!-- ════════════ SPLASH — первый экран (Академия) ════════════ -->
+<style>
+  #splashScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 90% at 50% 35%,#13233A 0%,#0A0F17 60%,#070A10 100%);
+    transition:opacity .5s ease;opacity:1;}
+  #splashScreen.hide{opacity:0;pointer-events:none;}
+  #splashScreen .sp-inner{text-align:center;padding:0 28px;}
+  #splashScreen .sp-logo{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;
+    justify-content:center;margin:0 auto 22px;background:rgba(127,200,248,0.12);border:1px solid rgba(127,200,248,0.28);}
+  #splashScreen .sp-logo svg{width:30px;height:30px;}
+  #splashScreen .sp-academy{color:rgba(255,255,255,0.62);font-size:14px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;}
+  #splashScreen .sp-title{color:#fff;font-size:30px;font-weight:800;margin-top:8px;line-height:1.15;}
+  #splashScreen .sp-sub{color:#7FC8F8;font-size:13px;font-weight:600;margin-top:14px;letter-spacing:.04em;}
+  #splashScreen .sp-hint{color:rgba(255,255,255,0.34);font-size:11px;margin-top:34px;}
+</style>
+<div id="splashScreen" onclick="hideSplash()">
+  <div class="sp-inner">
+    <div class="sp-logo">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M4 16 L4 4 L16 4 M4 10 L13 10 M10 16 L10 4" stroke="#7FC8F8" stroke-width="2.4" stroke-linecap="round"/></svg>
     </div>
-
-    <div class="onb-eyebrow">Стартовый чек-лист</div>
-    <div class="onb-title">Привет!<br>Так не страшно.</div>
-    <p class="onb-lead">Пройди 7 шагов, чтобы освоить базовый фундаментал. Это <b>не курс</b> — просто маршрут по приложению.</p>
-
-    <div class="onb-progress"><div class="pb-fill" id="onbFill" style="width: 0%;"></div></div>
-
-    <div class="onb-steps" id="onbSteps">
-      <div class="onb-step" data-step="search" data-target="search">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Открой Поиск</div>
-          <div class="onb-step-sub">Найди первую компанию</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="profile" data-target="profile">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Посмотри Профиль</div>
-          <div class="onb-step-sub">Кратко: кто, что, сколько</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="zones" data-target="multipliers">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Пойми светофор</div>
-          <div class="onb-step-sub">Зелёный / жёлтый / красный</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="multi" data-target="multipliers">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Прочитай мультипликаторы</div>
-          <div class="onb-step-sub">P/E, P/B, ROE по-простому</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="div" data-target="dividends">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Загляни в дивиденды</div>
-          <div class="onb-step-sub">TTM, DSI, история</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="cmp" data-target="compare">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Сравни две компании</div>
-          <div class="onb-step-sub">Бок о бок · до 3</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="onb-step" data-step="xlsx" data-target="profile">
-        <div class="check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7 L6 10 L11 4" stroke="#0E1116" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="onb-step-body">
-          <div class="onb-step-title">Скачай Excel-выгрузку</div>
-          <div class="onb-step-sub">Всё одним файлом</div>
-        </div>
-        <svg class="onb-step-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-    </div>
-
-    <button class="onb-skip" onclick="closeOnboarding()">Пропустить и начать</button>
+    <div class="sp-academy">Академия</div>
+    <div class="sp-title">«Инвестиции&nbsp;просто»</div>
+    <div class="sp-sub">Фундаментал · Акции · Облигации</div>
+    <div class="sp-hint">нажми, чтобы продолжить</div>
   </div>
 </div>
 
@@ -532,16 +473,6 @@
       <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
 
-    <div class="menu-sheet-title" style="margin-top: 10px;">Помощь</div>
-
-    <div class="menu-item" onclick="menuJump('__onboarding')">
-      <div class="menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9 a3 3 0 1 1 4 3 v2"/><circle cx="12" cy="17" r="0.8" fill="currentColor"/></svg></div>
-      <div class="menu-item-body">
-        <div class="menu-item-title">Стартовый чек-лист</div>
-        <div class="menu-item-sub">7 шагов знакомства с приложением</div>
-      </div>
-      <svg class="menu-item-chev" width="10" height="14" viewBox="0 0 10 14"><path d="M2 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
 
     <button class="menu-sheet-close" onclick="closeMenu()">Закрыть</button>
   </div>
@@ -611,76 +542,22 @@ function closeMenu() {
 }
 function menuJump(target) {
   closeMenu();
-  if (target === '__onboarding') {
-    openOnboarding();
-  } else {
-    switchTab(target);
-  }
+  switchTab(target);
 }
 
-// ==================== ONBOARDING ====================
-function openOnboarding() {
-  var ov = document.getElementById('onbOverlay');
-  if (ov) ov.classList.add('show');
+// ==================== SPLASH (первый экран) ====================
+function hideSplash() {
+  var s = document.getElementById('splashScreen');
+  if (!s || s.classList.contains('hide')) return;
+  s.classList.add('hide');
+  setTimeout(function(){ s.style.display = 'none'; }, 550);
 }
-function closeOnboarding() {
-  var ov = document.getElementById('onbOverlay');
-  if (ov) ov.classList.remove('show');
-  try { localStorage.setItem('fk_onboarded', '1'); } catch(e) {}
-}
-function onbToggleStep(stepKey) {
-  var step = document.querySelector('.onb-step[data-step="' + stepKey + '"]');
-  if (!step) return;
-  step.classList.toggle('done');
-  onbUpdateProgress();
-  try {
-    var done = Array.from(document.querySelectorAll('.onb-step.done')).map(function(s){ return s.dataset.step; });
-    localStorage.setItem('fk_onboarded_steps', JSON.stringify(done));
-  } catch(e) {}
-}
-function onbUpdateProgress() {
-  var all = document.querySelectorAll('.onb-step');
-  var done = document.querySelectorAll('.onb-step.done');
-  var doneEl = document.getElementById('onbDone');
-  var fillEl = document.getElementById('onbFill');
-  if (doneEl) doneEl.textContent = done.length;
-  if (fillEl) fillEl.style.width = ((done.length / Math.max(all.length, 1)) * 100) + '%';
-}
+// заглушки — на случай старых вызовов чек-листа
+function openOnboarding() {}
+function closeOnboarding() {}
 document.addEventListener('DOMContentLoaded', function() {
-  // Restore step state
-  try {
-    var saved = JSON.parse(localStorage.getItem('fk_onboarded_steps') || '[]');
-    saved.forEach(function(k) {
-      var s = document.querySelector('.onb-step[data-step="' + k + '"]');
-      if (s) s.classList.add('done');
-    });
-  } catch(e) {}
-  onbUpdateProgress();
-
-  // Wire step clicks: mark done + jump to target tab + close overlay
-  document.querySelectorAll('.onb-step').forEach(function(step) {
-    step.addEventListener('click', function() {
-      step.classList.add('done');
-      onbUpdateProgress();
-      try {
-        var done = Array.from(document.querySelectorAll('.onb-step.done')).map(function(s){ return s.dataset.step; });
-        localStorage.setItem('fk_onboarded_steps', JSON.stringify(done));
-      } catch(e) {}
-      var target = step.dataset.target;
-      closeOnboarding();
-      if (target) switchTab(target);
-    });
-  });
-
-  // First-visit autoshow
-  try {
-    if (!localStorage.getItem('fk_onboarded')) {
-      // Don't auto-show during access-gate flow; only after a small delay
-      setTimeout(function() {
-        if (!document.querySelector('.access-gate:not(.access-gate-hidden)')) openOnboarding();
-      }, 400);
-    }
-  } catch(e) {}
+  // Первый экран — Академия. Уходит сам через 1,8 с или по тапу.
+  setTimeout(hideSplash, 1800);
 });
 
 // ==================== HOME — recently viewed company ====================
