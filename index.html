@@ -2197,13 +2197,13 @@ async function drawBondFKChart(sid) {
     if (BOND_FK_CHART[sid]) BOND_FK_CHART[sid].destroy();
     BOND_FK_CHART[sid] = new Chart(cv.getContext('2d'), {
       type: 'line',
-      data: { labels: labels, datasets: [{ data: closes, borderColor: '#A8D5F0',
-        backgroundColor: 'rgba(168,213,240,0.12)', fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2 }] },
+      data: { labels: labels, datasets: [{ data: closes, borderColor: '#4C8DFF',
+        backgroundColor: 'rgba(76,141,255,0.20)', fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2.4 }] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
           tooltip: { displayColors: false, callbacks: { label: function(x) { return Number(x.raw).toFixed(2) + '%'; } } } },
-        scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 9 } }, grid: { display: false } },
-          y: { ticks: { callback: function(v) { return v + '%'; }, font: { size: 9 } } } } }
+        scales: { x: { ticks: { color: 'rgba(255,255,255,0.65)', maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 9 } }, grid: { display: false } },
+          y: { ticks: { color: 'rgba(255,255,255,0.65)', callback: function(v) { return v + '%'; }, font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.10)' } } } }
     });
     var f = closes[0], l = closes[closes.length - 1];
     var mn = Math.min.apply(null, closes), mx = Math.max.apply(null, closes);
