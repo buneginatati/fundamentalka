@@ -2134,7 +2134,7 @@ async function loadBondFK(sid) {
     var s = row1('securities'), m = row1('marketdata');
     var price = m.LAST || m.LCLOSEPRICE || m.MARKETPRICE || s.PREVLEGALCLOSEPRICE || s.PREVPRICE || s.PREVWAPRICE;
     var ytm = m.YIELD || m.YIELDATPREVWAPRICE || s.YIELDATPREVWAPRICE;
-    var face = s.FACEVALUE, cur = s.FACEUNIT || '₽';
+    var face = s.FACEVALUE, cur = (s.FACEUNIT && !/^(SUR|RUB|RUR)$/i.test(s.FACEUNIT)) ? s.FACEUNIT : '₽';
     function n(v, suf) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + (suf || ''); }
     var grid = ''
       + fkRow('Цена', n(price, '% от номинала'))
