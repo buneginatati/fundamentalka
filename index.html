@@ -291,6 +291,22 @@
           <div class="chart-stats" id="prof-chart-stats"></div>
         </div>
 
+        <!-- Оценка акции (скоринг) -->
+        <div class="surface span-full" id="prof-score-block" style="display:none;">
+          <div class="tile-label" style="margin-bottom: 12px;">Оценка акции</div>
+          <div id="prof-score-hero" style="border-radius:18px;padding:18px 18px 16px;color:#fff;background:#2E8B57;">
+            <div style="font-size:12px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.06em;">Итоговый балл</div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">
+              <span id="prof-score-value" style="font-size:46px;font-weight:800;line-height:1;font-family:var(--font-mono,monospace);">0,0</span>
+              <span style="font-size:18px;opacity:.7;font-weight:700;">/ 10</span>
+            </div>
+            <div id="prof-score-verdict" style="font-size:15px;font-weight:800;margin-top:8px;">—</div>
+            <div id="prof-score-tag" style="font-size:12px;opacity:.85;margin-top:4px;line-height:1.45;"></div>
+          </div>
+          <div id="prof-score-blocks" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;"></div>
+          <div id="prof-score-note" style="font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.45;"></div>
+        </div>
+
         <!-- Акции -->
         <div class="surface span-full" id="prof-shares-block" style="display:none;">
           <div class="tile-label" style="margin-bottom: 10px;">Акции компании</div>
@@ -1064,6 +1080,7 @@ async function loadFundamentals() {
       renderFinancials(currentCompany.primaryTicker, currentCompany.emitent_title);
       renderDividends(currentCompany.primaryTicker, currentCompany.emitent_title);
       renderCalendar(currentCompany.primaryTicker, currentCompany.emitent_title);
+      renderStockScore(currentCompany.primaryTicker, currentCompany.emitent_title);
     }
   } catch (e) {
     console.error('Supabase load failed', e);
@@ -1451,6 +1468,119 @@ async function fetchShareMarketdata(secid) {
   }
 }
 
+// ==================== ОЦЕНКА АКЦИИ (скоринг) ====================
+// Балл 0–10 по той же методике, что в Акциаторе, на данных, которые
+// карточка компании уже грузит. Ученик ничего не вводит.
+var QUAL_DATA = null, qualPromise = null;
+function loadQual() {
+  if (qualPromise) return qualPromise;
+  qualPromise = fetch('qual.json').then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ QUAL_DATA = j; }).catch(function(){ QUAL_DATA = null; });
+  return qualPromise;
+}
+loadQual();
+
+// тикер в снимке: точное совпадение, иначе преф → база (SBERP → SBER)
+function fundKey(ticker) {
+  if (!FUND || !ticker) return null;
+  if (FUND[ticker]) return ticker;
+  if (/^[A-Z]+P$/.test(ticker) && FUND[ticker.slice(0, -1)]) return ticker.slice(0, -1);
+  return null;
+}
+
+function zonePts(metric, value) {
+  var z = zoneFor(metric, value);
+  return z === 'green' ? 1 : z === 'yellow' ? 0.5 : 0;
+}
+
+// { total, verdict:{zone,text,tag}, blocks:[{name,pts,max}], isBank, hasQual }
+function computeStockScore(ticker) {
+  var key = fundKey(ticker);
+  var f = key ? FUND[key] : null;
+  if (!f) return null;
+  ticker = key;
+  var hist = (typeof HISTORY_CACHE !== 'undefined' && HISTORY_CACHE[ticker]) || null;
+  var lastYear = (hist && hist.length > 0) ? (hist[0].raw || {}) : {};
+  function pick(k){ return (f[k] !== null && f[k] !== undefined) ? f[k] : lastYear[k]; }
+
+  var isBank = (f.sector === 'bank') ||
+    (f.net_interest_margin !== null && f.net_interest_margin !== undefined);
+
+  // Блок 1 — Мультипликаторы (макс 2,5)
+  var W1 = 2.5 / 3;
+  var b1 = zonePts('p_e', pick('p_e')) * W1 + zonePts('p_b', pick('p_b')) * W1 + zonePts('p_s', pick('p_s')) * W1;
+
+  // Блок 2 — Финансовое здоровье (макс 2,5). Банкам долг не считаем.
+  var b2;
+  if (isBank) {
+    var Wb = 2.5 / 2;
+    b2 = zonePts('roe', pick('roe')) * Wb + zonePts('roa', pick('roa')) * Wb;
+  } else {
+    var W2 = 2.5 / 3;
+    b2 = zonePts('roe', pick('roe')) * W2 + zonePts('roa', pick('roa')) * W2 + zonePts('debt_ebitda', pick('debt_ebitda')) * W2;
+  }
+
+  // Блок 3 — Дивиденды (макс 2,5). Рост выручки/прибыли в снимке нет → не штрафуем сверх.
+  var dv = DIVS_DATA && DIVS_DATA[ticker];
+  var divYield = dv && dv.forecast && dv.forecast.yield != null ? dv.forecast.yield
+               : dv && dv.ttm_yield != null ? dv.ttm_yield : null;
+  var b3 = zonePts('div_yield', divYield) * 2.5;
+
+  // Блок 4 — Качественные факторы (макс 2,5), проставляем мы (qual.json)
+  var q = QUAL_DATA && QUAL_DATA.data && QUAL_DATA.data[ticker];
+  var qN = 0;
+  if (q) ['sector','strategy','governance','divPolicy','cleanHistory'].forEach(function(k){ if (q[k]) qN++; });
+  var b4 = qN * 0.5;
+  var hasQual = !!q;
+
+  var total = Math.round((b1 + b2 + b3 + b4) * 10) / 10;
+  var verdict = total >= 8 ? { zone:'green',  text:'Достойно изучения дальше', tag:'Большинство показателей в зелёной зоне. Можно копать глубже: отчёты, стратегия.' }
+              : total >= 5 ? { zone:'yellow', text:'Спорная история',           tag:'Есть и плюсы, и минусы — смотри, какие метрики важнее для тебя.' }
+              :              { zone:'red',    text:'Лучше пропустить',          tag:'Слишком много красных зон. Если интересно — фиксируй риски осознанно.' };
+
+  return {
+    total: total, verdict: verdict, isBank: isBank, hasQual: hasQual,
+    blocks: [
+      { name: 'Мультипликаторы', pts: b1, max: 2.5 },
+      { name: isBank ? 'Финздоровье (банк)' : 'Финздоровье', pts: b2, max: 2.5 },
+      { name: 'Дивиденды', pts: b3, max: 2.5 },
+      { name: 'Качественные факторы', pts: b4, max: 2.5 }
+    ]
+  };
+}
+
+async function renderStockScore(ticker, companyName) {
+  var block = document.getElementById('prof-score-block');
+  if (!block) return;
+  if (!ticker || !fundKey(ticker)) { block.style.display = 'none'; return; }
+  await loadQual();
+  var s = computeStockScore(ticker);
+  if (!s) { block.style.display = 'none'; return; }
+
+  var hero = document.getElementById('prof-score-hero');
+  var col = s.verdict.zone === 'green' ? '#2E8B57' : s.verdict.zone === 'yellow' ? '#C99A2E' : '#B5524A';
+  hero.style.background = col;
+  document.getElementById('prof-score-value').textContent = s.total.toFixed(1).replace('.', ',');
+  document.getElementById('prof-score-verdict').textContent = s.verdict.text;
+  document.getElementById('prof-score-tag').textContent = s.verdict.tag;
+
+  document.getElementById('prof-score-blocks').innerHTML = s.blocks.map(function(b){
+    var pct = Math.max(0, Math.min(100, (b.pts / b.max) * 100));
+    return '<div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'
+      +   '<span>' + b.name + '</span><span style="font-family:var(--font-mono,monospace);color:var(--text-dim);">'
+      +   b.pts.toFixed(1).replace('.', ',') + ' / 2,5</span></div>'
+      + '<div style="height:7px;border-radius:6px;background:rgba(0,0,0,0.08);overflow:hidden;">'
+      +   '<div style="height:100%;width:' + pct.toFixed(0) + '%;background:' + col + ';border-radius:6px;"></div></div>'
+      + '</div>';
+  }).join('');
+
+  var note = 'Балл рассчитан автоматически по доступным данным.';
+  if (!s.hasQual) note += ' Качественные факторы по этой компании ещё не заданы — учитываются как 0.';
+  document.getElementById('prof-score-note').textContent = note;
+  block.style.display = 'block';
+}
+
 var loadSeq = 0;
 async function loadCompany(emitent_id) {
   if (!emitent_id) return;
@@ -1554,6 +1684,7 @@ async function loadCompany(emitent_id) {
   renderFinancials(primaryTicker, emitter.emitent_title);
   renderDividends(primaryTicker, emitter.emitent_title);
   renderCalendar(primaryTicker, emitter.emitent_title);
+  renderStockScore(primaryTicker, emitter.emitent_title);
   renderInsiders(emitter);
 
   // Прикрепляем текущую открытую компанию первым слотом сравнения
