@@ -158,7 +158,7 @@
 
   <!-- ──────── ПРОФИЛЬ ──────── -->
   <div class="tab-content" id="tab-profile">
-    <div class="chip-strip"><button class="chip active" data-tab="profile">Профиль</button><button class="chip" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
+    <div class="chip-strip"><button class="chip active" data-tab="profile">Профиль</button><button class="chip" onclick="scrollToProf('prof-score-block')">Оценка акции</button><button class="chip" onclick="scrollToProf('prof-bonds-block')">Облигации</button><button class="chip" data-tab="financials">Финансы</button><button class="chip" data-tab="multipliers">Мульти</button><button class="chip" data-tab="dividends">Дивы</button><button class="chip" data-tab="calendar">Календарь</button></div>
     <div id="profile-empty" class="empty-state">
       <div class="es-glyph">🔍</div>
       Сначала выбери компанию во вкладке «Поиск».
@@ -546,6 +546,19 @@ function closeMenu() {
 function menuJump(target) {
   closeMenu();
   switchTab(target);
+}
+
+// Прокрутка к секции внутри карточки компании (единая навигация объединённого приложения)
+function scrollToProf(id) {
+  if (!document.getElementById('tab-profile').classList.contains('active')) switchTab('profile');
+  var el = document.getElementById(id);
+  if (el && el.style.display !== 'none') {
+    setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+  } else {
+    // секции ещё нет (компания не выбрана или нет данных) — мягко подскажем
+    var pe = document.getElementById('profile-empty');
+    if (pe && pe.style.display !== 'none') pe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 // ==================== SPLASH (первый экран) ====================
@@ -1723,12 +1736,11 @@ function renderSharesList(shares) {
       s.cap ? 'кап. ' + formatMoney(s.cap) : null,
       s.listLevel ? 'листинг ' + s.listLevel : null
     ].filter(Boolean).join(' · ');
-    var url = STOCK_CALC_URL + '?ticker=' + encodeURIComponent(s.secid);
-    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="moex-item" style="text-decoration:none; display:block;">'
+    return '<div class="moex-item" style="display:block;">'
       + '<span class="moex-item-name">' + escHtml(s.shortname || s.name) + '</span>'
       + '<span class="moex-item-ticker">' + escHtml(s.secid) + (typeLabel ? ' · ' + typeLabel : '') + '</span>'
-      + '<div class="moex-item-details">' + escHtml(meta || '—') + ' &nbsp;→ открыть в Акциаторе</div>'
-      + '</a>';
+      + '<div class="moex-item-details">' + escHtml(meta || '—') + '</div>'
+      + '</div>';
   }).join('');
 }
 
