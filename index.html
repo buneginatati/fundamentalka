@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Фундаменталка — Инвестиции просто</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://iss.moex.com https://hlpfobpuwvoiuxdvhczb.supabase.co; frame-ancestors https://web.telegram.org https://t.me 'self'; base-uri 'self'; form-action 'none'; worker-src blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://iss.moex.com https://hlpfobpuwvoiuxdvhczb.supabase.co https://*.trycloudflare.com; frame-ancestors https://web.telegram.org https://t.me 'self'; base-uri 'self'; form-action 'none'; worker-src blob:;">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="rating" content="general">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -46,6 +46,38 @@
     <div class="sp-title">«Инвестиции&nbsp;просто»</div>
     <div class="sp-sub">Фундаментал · Акции · Облигации</div>
     <div class="sp-hint">нажми, чтобы продолжить</div>
+  </div>
+</div>
+
+<!-- ════════════ ВХОД (вариант А — по почте). Включается флагом LOGIN_GATE ════════════ -->
+<style>
+  #loginScreen{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(120% 90% at 50% 30%,#13233A 0%,#0A0F17 60%,#070A10 100%);}
+  #loginScreen.show{display:flex;}
+  #loginScreen .lg-card{width:min(92vw,360px);text-align:center;padding:0 24px;}
+  #loginScreen .lg-academy{color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+  #loginScreen .lg-title{color:#fff;font-size:24px;font-weight:800;margin:6px 0 22px;}
+  #loginScreen input[type=email]{width:100%;box-sizing:border-box;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.16);
+    background:rgba(255,255,255,0.06);color:#fff;font-size:16px;outline:none;}
+  #loginScreen input[type=email]::placeholder{color:rgba(255,255,255,0.4);}
+  #loginScreen .lg-consent{display:flex;gap:9px;align-items:flex-start;text-align:left;margin:14px 2px;color:rgba(255,255,255,0.7);font-size:12px;line-height:1.45;}
+  #loginScreen .lg-consent a{color:#7FC8F8;}
+  #loginScreen .lg-btn{width:100%;margin-top:6px;padding:14px;border:0;border-radius:14px;background:#4C8DFF;color:#fff;
+    font-size:16px;font-weight:800;cursor:pointer;}
+  #loginScreen .lg-btn[disabled]{opacity:.55;cursor:default;}
+  #loginScreen .lg-status{margin-top:12px;font-size:13px;min-height:18px;color:#FF9A8A;}
+</style>
+<div id="loginScreen">
+  <div class="lg-card">
+    <div class="lg-academy">Академия «Инвестиции&nbsp;просто»</div>
+    <div class="lg-title">Вход для учеников</div>
+    <input id="lgEmail" type="email" inputmode="email" autocomplete="email" placeholder="Почта, на которую покупали курс">
+    <label class="lg-consent">
+      <input id="lgConsent" type="checkbox" style="margin-top:2px;">
+      <span>Даю согласие на обработку моей почты для проверки доступа. <a href="legal.html" target="_blank" rel="noopener">Политика&nbsp;конфиденциальности</a></span>
+    </label>
+    <button class="lg-btn" id="lgBtn" onclick="doLogin()">Войти</button>
+    <div class="lg-status" id="lgStatus"></div>
   </div>
 </div>
 
@@ -571,9 +603,59 @@ function hideSplash() {
 // заглушки — на случай старых вызовов чек-листа
 function openOnboarding() {}
 function closeOnboarding() {}
+
+// ==================== ВХОД (вариант А) ====================
+// Эндпоинт на российском сервере (HTTPS через cloudflared). URL временный
+// (quick-tunnel) — к продакшену заменить на стабильный домен/именованный туннель.
+var AUTH_ENDPOINT = 'https://sur-led-rings-buttons.trycloudflare.com';
+// Гейт ВЫКЛЮЧЕН в проде: приложение работает как сейчас. Включаем в понедельник
+// (после тега Алины + подачи в РКН). Превью входа — открыть с ?login=1.
+var LOGIN_GATE = false;
+
+function loginGateOn() {
+  try { if (new URLSearchParams(location.search).get('login') === '1') return true; } catch (e) {}
+  return LOGIN_GATE;
+}
+
+function maybeShowLogin() {
+  if (!loginGateOn()) return;
+  try { if (localStorage.getItem('ak_auth') === '1') return; } catch (e) {}
+  document.getElementById('loginScreen').classList.add('show');
+}
+
+async function doLogin() {
+  var email = (document.getElementById('lgEmail').value || '').trim();
+  var consent = document.getElementById('lgConsent').checked;
+  var st = document.getElementById('lgStatus');
+  var btn = document.getElementById('lgBtn');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { st.textContent = 'Проверь адрес почты.'; return; }
+  if (!consent) { st.textContent = 'Нужно согласие на обработку почты.'; return; }
+  btn.disabled = true; st.style.color = 'rgba(255,255,255,0.6)'; st.textContent = 'Проверяю…';
+  try {
+    var r = await fetch(AUTH_ENDPOINT + '/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, consent: true })
+    });
+    var j = await r.json();
+    if (j.ok) {
+      try { localStorage.setItem('ak_auth', '1'); } catch (e) {}
+      document.getElementById('loginScreen').classList.remove('show');
+    } else {
+      st.style.color = '#FF9A8A';
+      st.textContent = j.reason === 'not_student'
+        ? 'Не нашли тебя среди учеников. Напиши в поддержку Академии.'
+        : (j.reason === 'no_consent' ? 'Нужно согласие на обработку почты.' : 'Не получилось войти, попробуй ещё раз.');
+      btn.disabled = false;
+    }
+  } catch (e) {
+    st.style.color = '#FF9A8A'; st.textContent = 'Сервер недоступен, попробуй позже.';
+    btn.disabled = false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Первый экран — Академия. Уходит сам через 1,8 с или по тапу.
-  setTimeout(hideSplash, 1800);
+  setTimeout(function() { hideSplash(); maybeShowLogin(); }, 1800);
 });
 
 // ==================== HOME — recently viewed company ====================
