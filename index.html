@@ -36,6 +36,24 @@
   .bond-cta{color:#2C7DB8;font-weight:700;white-space:nowrap;}
   .bond-detail{padding:2px 12px 12px;}
   .bond-wrap{border-bottom:1px solid rgba(0,0,0,0.05);}
+  /* Состояния экрана поиска */
+  .srch-empty{text-align:center;padding:30px 18px 8px;}
+  .srch-empty .se-glyph{font-size:40px;opacity:.5;}
+  .srch-empty .se-title{font-size:18px;font-weight:800;color:var(--text);margin:12px 0 6px;}
+  .srch-empty .se-hint{font-size:13px;color:var(--text-dim);line-height:1.5;max-width:320px;margin:0 auto 16px;}
+  .ex-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .ex-chip{background:rgba(76,141,255,0.12);color:#2C7DB8;border:1px solid rgba(76,141,255,0.25);
+    border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;}
+  .ex-chip:hover{background:rgba(76,141,255,0.2);}
+  .sk-row{height:62px;border-radius:14px;margin:8px 0;
+    background:linear-gradient(90deg,rgba(0,0,0,0.05) 25%,rgba(0,0,0,0.09) 37%,rgba(0,0,0,0.05) 63%);
+    background-size:400% 100%;animation:sk 1.3s ease infinite;}
+  @keyframes sk{0%{background-position:100% 0}100%{background-position:0 0}}
+  .srch-err{text-align:center;padding:24px 18px;}
+  .srch-err .se-title{font-size:16px;font-weight:800;color:var(--text);margin:8px 0 4px;}
+  .srch-err .se-hint{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:14px;}
+  .retry-btn{background:#4C8DFF;color:#fff;border:0;border-radius:12px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;}
+  .fresh-note{font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px;}
 </style>
 <div id="splashScreen" onclick="hideSplash()">
   <div class="sp-inner">
@@ -556,6 +574,11 @@ function switchTab(name) {
   document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
   var content = document.getElementById('tab-' + name);
   if (content) content.classList.add('active');
+  if (name === 'search') {
+    var inp = document.getElementById('moexSearch');
+    var res = document.getElementById('moexResults');
+    if (res && !res.querySelector('.moex-item') && (!inp || !inp.value.trim())) renderSearchEmpty();
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   closeMenu();
 }
@@ -656,6 +679,9 @@ async function doLogin() {
 document.addEventListener('DOMContentLoaded', function() {
   // Первый экран — Академия. Уходит сам через 1,8 с или по тапу.
   setTimeout(function() { hideSplash(); maybeShowLogin(); }, 1800);
+  // Экран поиска: приглашающее пустое состояние, если ещё ничего не искали
+  var res = document.getElementById('moexResults');
+  if (res && !res.querySelector('.moex-item')) renderSearchEmpty();
 });
 
 // ==================== HOME — recently viewed company ====================
@@ -826,10 +852,60 @@ function matchesEmitter(e, q) {
 // Кэш найденных компаний — потом достаём при клике
 var foundEmitters = {}; // emitent_id -> emitter
 
+// ==================== СОСТОЯНИЯ ЭКРАНА ПОИСКА ====================
+var LAST_QUERY = '';
+
+function freshnessText() {
+  var u = FUND_META && FUND_META.updated;
+  if (!u || u.length < 10) return '';
+  return 'Данные на ' + u.slice(8, 10) + '.' + u.slice(5, 7) + '.' + u.slice(0, 4);
+}
+
+function renderSearchEmpty() {
+  var results = document.getElementById('moexResults');
+  if (!results) return;
+  results.innerHTML =
+    '<div class="srch-empty">'
+    + '<div class="se-glyph">🔍</div>'
+    + '<div class="se-title">С какой компании начнём?</div>'
+    + '<div class="se-hint">Введи название или тикер — например, «Сбербанк» или SBER. Покажу оценку, облигации и графики — считать ничего не нужно.</div>'
+    + '<div class="ex-chips">'
+    +   '<span class="ex-chip" onclick="exampleSearch(\'Сбербанк\')">Сбербанк</span>'
+    +   '<span class="ex-chip" onclick="exampleSearch(\'Газпром\')">Газпром</span>'
+    +   '<span class="ex-chip" onclick="exampleSearch(\'Лукойл\')">Лукойл</span>'
+    + '</div>'
+    + (freshnessText() ? '<div class="fresh-note">' + freshnessText() + '</div>' : '')
+    + '</div>';
+}
+
+function exampleSearch(q) {
+  var inp = document.getElementById('moexSearch');
+  if (inp) inp.value = q;
+  searchMoex(q);
+}
+
+function renderSearchSkeleton() {
+  var results = document.getElementById('moexResults');
+  if (results) results.innerHTML = '<div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div>';
+}
+
+function renderSearchError() {
+  var results = document.getElementById('moexResults');
+  if (!results) return;
+  results.innerHTML =
+    '<div class="srch-err">'
+    + '<div class="se-glyph" style="font-size:36px;opacity:.5;">☁️</div>'
+    + '<div class="se-title">Не получилось загрузить</div>'
+    + '<div class="se-hint">Похоже, на секунду пропала связь или биржа не ответила. Это не у тебя — попробуй ещё раз.</div>'
+    + '<button class="retry-btn" onclick="searchMoex(LAST_QUERY)">Повторить</button>'
+    + '</div>';
+}
+
 async function searchMoex(query) {
   var status = document.getElementById('moexStatus');
   var results = document.getElementById('moexResults');
   var btn = document.getElementById('moexSearchBtn');
+  if (query) LAST_QUERY = query;
 
   var q = (query || '').trim();
   if (q.length < 2) {
@@ -842,7 +918,7 @@ async function searchMoex(query) {
   btn.textContent = 'Ищу...';
   status.textContent = '';
   status.className = 'moex-status';
-  results.innerHTML = '';
+  renderSearchSkeleton();
 
   try {
     var url = MOEX_BASE + '/securities.json?q=' + encodeURIComponent(q) + '&limit=300&iss.meta=off';
@@ -851,8 +927,9 @@ async function searchMoex(query) {
     var rows = data.securities.data;
 
     if (!rows || rows.length === 0) {
-      status.textContent = 'По запросу «' + q + '» ничего не найдено.';
+      status.textContent = 'По запросу «' + q + '» ничего не нашлось. Попробуй другое название или тикер.';
       status.className = 'moex-status error';
+      renderSearchEmpty();
       btn.disabled = false;
       btn.textContent = 'Найти';
       return;
@@ -878,8 +955,9 @@ async function searchMoex(query) {
     });
 
     if (emitters.length === 0) {
-      status.textContent = 'По «' + q + '» компаний-эмитентов не нашлось. Попробуй другое название.';
+      status.textContent = 'По «' + q + '» компаний не нашлось. Попробуй другое название.';
       status.className = 'moex-status error';
+      renderSearchEmpty();
       btn.disabled = false;
       btn.textContent = 'Найти';
       return;
@@ -903,8 +981,9 @@ async function searchMoex(query) {
       loadCompany(emitters[0].emitent_id);
     }
   } catch (err) {
-    status.textContent = 'Не удалось подключиться к бирже. Проверь интернет.';
-    status.className = 'moex-status error';
+    status.textContent = '';
+    status.className = 'moex-status';
+    renderSearchError();
     console.error('MOEX search error:', err);
   }
 
@@ -938,6 +1017,7 @@ function renderEmitterResults(emitters) {
   }
 
   results.innerHTML = toRender.map(renderItem).join('');
+  if (freshnessText()) results.insertAdjacentHTML('beforeend', '<div class="fresh-note">' + freshnessText() + '</div>');
 
   if (!showAll) {
     var remaining = emitters.length - INITIAL_SHOW;
@@ -1552,6 +1632,7 @@ async function renderStockScore(ticker, companyName) {
 
   var note = 'Балл рассчитан автоматически по доступным данным.';
   if (!s.hasQual) note += ' Качественные факторы по этой компании ещё не заданы — учитываются как 0.';
+  if (freshnessText()) note += ' ' + freshnessText() + '.';
   document.getElementById('prof-score-note').textContent = note;
   block.style.display = 'block';
 }
