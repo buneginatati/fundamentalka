@@ -53,7 +53,6 @@
   .srch-err .se-title{font-size:16px;font-weight:800;color:var(--text);margin:8px 0 4px;}
   .srch-err .se-hint{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:14px;}
   .retry-btn{background:#4C8DFF;color:#fff;border:0;border-radius:12px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;}
-  .fresh-note{font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px;}
 </style>
 <div id="splashScreen" onclick="hideSplash()">
   <div class="sp-inner">
@@ -849,11 +848,6 @@ var foundEmitters = {}; // emitent_id -> emitter
 // ==================== СОСТОЯНИЯ ЭКРАНА ПОИСКА ====================
 var LAST_QUERY = '';
 
-function freshnessText() {
-  var u = FUND_META && FUND_META.updated;
-  if (!u || u.length < 10) return '';
-  return 'Данные на ' + u.slice(8, 10) + '.' + u.slice(5, 7) + '.' + u.slice(0, 4);
-}
 
 function renderSearchEmpty() {
   var results = document.getElementById('moexResults');
@@ -868,7 +862,6 @@ function renderSearchEmpty() {
     +   '<span class="ex-chip" onclick="exampleSearch(\'Газпром\')">Газпром</span>'
     +   '<span class="ex-chip" onclick="exampleSearch(\'Лукойл\')">Лукойл</span>'
     + '</div>'
-    + (freshnessText() ? '<div class="fresh-note">' + freshnessText() + '</div>' : '')
     + '</div>';
 }
 
@@ -1011,7 +1004,6 @@ function renderEmitterResults(emitters) {
   }
 
   results.innerHTML = toRender.map(renderItem).join('');
-  if (freshnessText()) results.insertAdjacentHTML('beforeend', '<div class="fresh-note">' + freshnessText() + '</div>');
 
   if (!showAll) {
     var remaining = emitters.length - INITIAL_SHOW;
@@ -1626,7 +1618,6 @@ async function renderStockScore(ticker, companyName) {
 
   var note = 'Балл рассчитан автоматически по доступным данным.';
   if (!s.hasQual) note += ' Качественные факторы по этой компании ещё не заданы — учитываются как 0.';
-  if (freshnessText()) note += ' ' + freshnessText() + '.';
   document.getElementById('prof-score-note').textContent = note;
   block.style.display = 'block';
 }
