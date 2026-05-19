@@ -412,6 +412,44 @@
     </div>
   </div>
 
+  <!-- ──────── ЕЩЁ / НАСТРОЙКИ (D4) ──────── -->
+  <div class="tab-content" id="tab-settings" role="tabpanel">
+    <div class="screen-header"><div>
+      <div class="screen-header-sub">Кабинет</div>
+      <div class="screen-header-title">Настройки</div>
+    </div></div>
+
+    <div class="surface span-full" style="margin-bottom:12px;">
+      <div class="tile-label" style="margin-bottom:10px;">Ученик</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--acc-blue),var(--acc-blue-deep));color:#0E1116;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;">👤</div>
+        <div style="flex:1;min-width:0;">
+          <div id="set-email" style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+          <div id="set-status" style="font-size:12px;color:var(--muted);margin-top:2px;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="surface span-full" style="margin-bottom:12px;">
+      <div class="tile-label" style="margin-bottom:2px;">Документы</div>
+      <a href="legal.html" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;padding:13px 0;color:var(--text);text-decoration:none;">
+        <span style="flex:1;font-size:14px;font-weight:600;">Политика конфиденциальности</span>
+        <svg width="12" height="14" viewBox="0 0 12 14" style="flex:none;"><path d="M2 1l8 6-8 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a id="set-offer" href="#" target="_blank" rel="noopener noreferrer" style="display:none;align-items:center;gap:12px;padding:13px 0;color:var(--text);text-decoration:none;border-top:1px solid rgba(255,255,255,0.06);">
+        <span style="flex:1;font-size:14px;font-weight:600;">Оферта</span>
+        <svg width="12" height="14" viewBox="0 0 12 14" style="flex:none;"><path d="M2 1l8 6-8 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+    <button id="set-logout-btn" type="button" onclick="logout()" style="display:none;width:100%;padding:14px;border:1px solid rgba(255,255,255,0.14);border-radius:14px;background:rgba(255,255,255,0.04);color:#FF9A8A;font-size:14px;font-weight:700;cursor:pointer;">Выйти</button>
+
+    <div class="disclaimer-banner" style="margin-top:14px;">
+      <span class="badge-age">!</span>
+      <div>Информация ознакомительная, <b>не является ИИР</b> (ст. 6.1 39-ФЗ). Решения по бумагам — на ответственности пользователя. <a href="legal.html" target="_blank" rel="noopener noreferrer">Подробнее</a></div>
+    </div>
+  </div>
+
   <div class="footer">
     16+ · Академия «Инвестиции просто» · v3.0 ·
     <a href="legal.html" target="_blank" rel="noopener noreferrer">условия и источники →</a>
@@ -521,17 +559,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M16 16 L21 21"/></svg>
     <span>Поиск</span>
   </button>
-  <button class="bottom-tab" data-tab="multipliers">
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="17" r="3"/></svg>
-    <span>Мульти</span>
-  </button>
-  <button class="bottom-tab" data-tab="dividends">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L9 13 L13 16 L20 8 M20 8 V13 M20 8 H15"/></svg>
-    <span>Дивы</span>
-  </button>
   <button class="bottom-tab" data-tab="compare">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="8" height="12" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/></svg>
     <span>Сравнение</span>
+  </button>
+  <button class="bottom-tab" data-tab="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    <span>Ещё</span>
   </button>
 </nav>
 
@@ -559,6 +593,7 @@ function switchTab(name) {
     var res = document.getElementById('moexResults');
     if (res && !res.querySelector('.moex-item') && (!inp || !inp.value.trim())) renderSearchEmpty();
   }
+  if (name === 'settings' && typeof renderSettings === 'function') renderSettings();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   closeMenu();
 }
@@ -641,8 +676,9 @@ async function doLogin() {
     });
     var j = await r.json();
     if (j.ok) {
-      try { localStorage.setItem('ak_auth', '1'); } catch (e) {}
+      try { localStorage.setItem('ak_auth', '1'); localStorage.setItem('ak_email', email); } catch (e) {}
       document.getElementById('loginScreen').classList.remove('show');
+      if (typeof renderSettings === 'function') renderSettings();
     } else {
       st.style.color = '#FF9A8A';
       st.textContent = j.reason === 'not_student'
@@ -653,6 +689,59 @@ async function doLogin() {
   } catch (e) {
     st.style.color = '#FF9A8A'; st.textContent = 'Сервер недоступен, попробуй позже.';
     btn.disabled = false;
+  }
+}
+
+// ==================== НАСТРОЙКИ / ВЫХОД (D4) ====================
+// Ссылка на оферту (отдельный документ). Пусто → строка скрыта.
+var OFFER_URL = '';
+
+function renderSettings() {
+  var emailEl = document.getElementById('set-email');
+  var statusEl = document.getElementById('set-status');
+  var logoutBtn = document.getElementById('set-logout-btn');
+  var offerLink = document.getElementById('set-offer');
+  if (!emailEl) return;
+
+  var email = '';
+  try { email = localStorage.getItem('ak_email') || ''; } catch (e) {}
+  var authed = false;
+  try { authed = localStorage.getItem('ak_auth') === '1'; } catch (e) {}
+
+  if (authed && email) {
+    emailEl.textContent = email;
+    statusEl.textContent = 'Доступ открыт — ученик Академии';
+    if (logoutBtn) logoutBtn.style.display = '';
+  } else if (loginGateOn()) {
+    emailEl.textContent = 'Вход не выполнен';
+    statusEl.textContent = 'Войдите по почте, на которую куплен курс';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  } else {
+    emailEl.textContent = 'Открытый доступ';
+    statusEl.textContent = 'Вход по почте включим позже';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+
+  if (offerLink) {
+    if (OFFER_URL) { offerLink.href = OFFER_URL; offerLink.style.display = 'flex'; }
+    else { offerLink.style.display = 'none'; }
+  }
+}
+
+function logout() {
+  try { localStorage.removeItem('ak_auth'); localStorage.removeItem('ak_email'); } catch (e) {}
+  renderSettings();
+  if (loginGateOn()) {
+    var ls = document.getElementById('loginScreen');
+    var le = document.getElementById('lgEmail');
+    var lc = document.getElementById('lgConsent');
+    var lst = document.getElementById('lgStatus');
+    if (le) le.value = '';
+    if (lc) lc.checked = false;
+    if (lst) lst.textContent = '';
+    if (ls) ls.classList.add('show');
+  } else {
+    switchTab('home');
   }
 }
 
@@ -832,6 +921,7 @@ function homeExample(q) {
 document.addEventListener('DOMContentLoaded', function(){
   renderHomeRecent();
   renderFavorites();
+  if (typeof renderSettings === 'function') renderSettings();
   var hs = document.getElementById('homeSearch');
   if (hs) hs.addEventListener('keydown', function(e){ if (e.key === 'Enter') homeSearchGo(); });
 });
