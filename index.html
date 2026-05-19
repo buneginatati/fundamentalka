@@ -98,6 +98,37 @@
   </div>
 </div>
 
+<!-- ════════════ ПРИВЕТСТВЕННЫЙ ЭКРАН (онбординг, один раз) ════════════ -->
+<style>
+  #welcomeScreen{position:fixed;inset:0;z-index:9997;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(120% 90% at 50% 30%,#13233A 0%,#0A0F17 60%,#070A10 100%);}
+  #welcomeScreen.show{display:flex;}
+  #welcomeScreen .wc-card{width:min(92vw,380px);text-align:center;padding:0 24px;}
+  #welcomeScreen .wc-academy{color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+  #welcomeScreen .wc-title{color:#fff;font-size:25px;font-weight:800;margin:8px 0 20px;line-height:1.22;}
+  #welcomeScreen .wc-list{text-align:left;display:flex;flex-direction:column;gap:14px;margin:0 0 26px;}
+  #welcomeScreen .wc-item{display:flex;gap:12px;align-items:flex-start;color:rgba(255,255,255,0.82);font-size:14px;line-height:1.45;}
+  #welcomeScreen .wc-ic{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:15px;}
+  #welcomeScreen .wc-item b{color:#fff;font-weight:700;}
+  #welcomeScreen .wc-btn{width:100%;padding:15px;border:0;border-radius:14px;background:#4C8DFF;color:#fff;font-size:16px;font-weight:800;cursor:pointer;}
+  #welcomeScreen .wc-note{margin-top:14px;font-size:11px;color:rgba(255,255,255,0.45);line-height:1.45;}
+  #welcomeScreen .wc-note a{color:#7FC8F8;}
+</style>
+<div id="welcomeScreen">
+  <div class="wc-card">
+    <div class="wc-academy">Академия «Инвестиции&nbsp;просто»</div>
+    <div class="wc-title">Это Фундаменталка —<br>помощник по компаниям</div>
+    <div class="wc-list">
+      <div class="wc-item"><span class="wc-ic">🔎</span><span>Находишь компанию — <b>Сбер, Газпром, Лукойл</b> и любую другую.</span></div>
+      <div class="wc-item"><span class="wc-ic">📊</span><span>Сразу видишь <b>профиль, финансы, мультипликаторы, дивиденды</b> и графики.</span></div>
+      <div class="wc-item"><span class="wc-ic">📑</span><span>Смотришь <b>облигации</b> компании и сравниваешь бумаги бок о бок.</span></div>
+      <div class="wc-item"><span class="wc-ic">⭐</span><span>Считать ничего не нужно — данные уже собраны. Нужное — в <b>Избранное</b>.</span></div>
+    </div>
+    <button class="wc-btn" onclick="closeWelcome()">Поехали →</button>
+    <div class="wc-note">Информация ознакомительная, не является ИИР (ст. 6.1 39-ФЗ). <a href="legal.html" target="_blank" rel="noopener">Подробнее</a></div>
+  </div>
+</div>
+
 <!-- ════════════ HEADER ════════════ -->
 <header class="header">
   <div class="header-brand">
@@ -650,6 +681,10 @@ var AUTH_ENDPOINT = 'https://sur-led-rings-buttons.trycloudflare.com';
 // (после тега Алины + подачи в РКН). Превью входа — открыть с ?login=1.
 var LOGIN_GATE = false;
 
+// Оценка акции (балл 0–10) временно скрыта по решению Татьяны (модель занижает
+// флагманы из-за нехватки данных). Код расчёта сохранён. Вернуть = true.
+var SHOW_SCORE = false;
+
 function loginGateOn() {
   try { if (new URLSearchParams(location.search).get('login') === '1') return true; } catch (e) {}
   return LOGIN_GATE;
@@ -659,6 +694,22 @@ function maybeShowLogin() {
   if (!loginGateOn()) return;
   try { if (localStorage.getItem('ak_auth') === '1') return; } catch (e) {}
   document.getElementById('loginScreen').classList.add('show');
+}
+
+// Приветственный экран — один раз. Если вход включён и не пройден — ждём логина.
+function maybeShowWelcome() {
+  if (loginGateOn()) {
+    try { if (localStorage.getItem('ak_auth') !== '1') return; } catch (e) { return; }
+  }
+  try { if (localStorage.getItem('ak_welcomed') === '1') return; } catch (e) {}
+  var w = document.getElementById('welcomeScreen');
+  if (w) w.classList.add('show');
+}
+function closeWelcome() {
+  try { localStorage.setItem('ak_welcomed', '1'); } catch (e) {}
+  var w = document.getElementById('welcomeScreen');
+  if (w) w.classList.remove('show');
+  if (typeof switchTab === 'function') switchTab('home');
 }
 
 async function doLogin() {
@@ -679,6 +730,7 @@ async function doLogin() {
       try { localStorage.setItem('ak_auth', '1'); localStorage.setItem('ak_email', email); } catch (e) {}
       document.getElementById('loginScreen').classList.remove('show');
       if (typeof renderSettings === 'function') renderSettings();
+      if (typeof maybeShowWelcome === 'function') maybeShowWelcome();
     } else {
       st.style.color = '#FF9A8A';
       st.textContent = j.reason === 'not_student'
@@ -747,7 +799,7 @@ function logout() {
 
 document.addEventListener('DOMContentLoaded', function() {
   // Первый экран — Академия. Уходит сам через 1,8 с или по тапу.
-  setTimeout(function() { hideSplash(); maybeShowLogin(); }, 1800);
+  setTimeout(function() { hideSplash(); maybeShowLogin(); maybeShowWelcome(); }, 1800);
   // Экран поиска: приглашающее пустое состояние, если ещё ничего не искали
   var res = document.getElementById('moexResults');
   if (res && !res.querySelector('.moex-item')) renderSearchEmpty();
@@ -787,6 +839,7 @@ function saveRecentCompany(emitter) {
   renderHomeRecent();
 }
 function recentScorePill(ticker) {
+  if (!SHOW_SCORE) return '';
   if (!ticker || typeof computeStockScore !== 'function') return '';
   var s = null;
   try { s = computeStockScore(ticker); } catch(e) { s = null; }
@@ -1799,6 +1852,7 @@ function computeStockScore(ticker) {
 async function renderStockScore(ticker, companyName) {
   var block = document.getElementById('prof-score-block');
   if (!block) return;
+  if (!SHOW_SCORE) { block.style.display = 'none'; return; }
   if (!ticker || !fundKey(ticker)) { block.style.display = 'none'; return; }
   await loadQual();
   var s = computeStockScore(ticker);
