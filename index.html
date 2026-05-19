@@ -150,6 +150,8 @@
       <span class="ex-chip" onclick="homeExample('Лукойл')">Лукойл</span>
     </div>
 
+    <div id="home-favorites" style="padding: 0 14px;"></div>
+
     <div id="home-recent" style="padding: 22px 14px 4px;"></div>
 
     <div style="padding: 6px 14px 4px;">
@@ -191,8 +193,9 @@
       Сначала выбери компанию во вкладке «Поиск».
     </div>
     <div id="profile-loaded" style="display:none;">
-      <div class="breadcrumb">
+      <div class="breadcrumb" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <span class="crumb-back" onclick="switchTab('search')">← Поиск</span>
+        <button id="prof-fav-btn" type="button" onclick="toggleFavorite()" aria-pressed="false" style="display:none;flex:none;padding:7px 11px;border:1px solid rgba(255,255,255,0.14);border-radius:11px;background:rgba(255,255,255,0.04);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">☆ В избранное</button>
       </div>
       <div class="screen-header">
         <div>
@@ -700,9 +703,24 @@ function recentScorePill(ticker) {
   try { s = computeStockScore(ticker); } catch(e) { s = null; }
   if (!s) return '';
   var col = s.verdict.zone === 'green' ? '#2E8B57' : s.verdict.zone === 'yellow' ? '#C99A2E' : '#B5524A';
-  return '<span style="flex:none;display:inline-flex;align-items:baseline;gap:2px;padding:5px 9px;border-radius:10px;background:' + col + ';color:#fff;font-weight:800;font-size:13px;">'
+  return '<span style="flex:none;display:inline-flex;align-items:baseline;gap:2px;padding:4px 7px;border-radius:9px;background:' + col + ';color:#fff;font-weight:800;font-size:12px;">'
     + s.total.toFixed(1).replace('.', ',')
     + '<span style="font-size:9px;font-weight:700;opacity:.8;">/10</span></span>';
+}
+function companyRow(r, cls, withRemove) {
+  var initials = (r.title || '').split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+  var trailing = withRemove
+    ? '<button class="fk-row-x" type="button" aria-label="Убрать из избранного" style="flex:none;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.06);color:#8A8F9C;font-size:12px;line-height:1;cursor:pointer;">✕</button>'
+    : '<svg width="12" height="14" viewBox="0 0 12 14" style="flex:none;"><path d="M2 1l8 6-8 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return '<div class="surface ' + cls + '" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:8px;">'
+    + '<div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--acc-blue),var(--acc-blue-deep));color:#0E1116;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;letter-spacing:-0.04em;flex:none;">' + escHtml(initials) + '</div>'
+    + '<div style="flex:1; min-width:0;">'
+    +   '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(r.title) + '</div>'
+    +   '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(r.ticker || '—') + '</div>'
+    + '</div>'
+    + recentScorePill(r.ticker)
+    + trailing
+    + '</div>';
 }
 function renderHomeRecent() {
   var el = document.getElementById('home-recent');
@@ -713,24 +731,76 @@ function renderHomeRecent() {
       + 'С чего начать: открой любую знакомую компанию — например, Сбер или Газпром. Сразу увидишь балл со светофором.</div>';
     return;
   }
-  var rows = list.map(function(r){
-    var initials = (r.title || '').split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
-    return '<div class="surface home-recent-row" style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:8px;">'
-      + '<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--acc-blue),var(--acc-blue-deep));color:#0E1116;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;letter-spacing:-0.04em;flex:none;">' + escHtml(initials) + '</div>'
-      + '<div style="flex:1; min-width:0;">'
-      +   '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(r.title) + '</div>'
-      +   '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(r.ticker || '—') + '</div>'
-      + '</div>'
-      + recentScorePill(r.ticker)
-      + '<svg width="12" height="14" viewBox="0 0 12 14" style="flex:none;"><path d="M2 1l8 6-8 6" stroke="#8A8F9C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-      + '</div>';
-  }).join('');
-  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 10px;">Недавние</div>' + rows;
+  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 10px;">Недавние</div>'
+    + list.map(function(r){ return companyRow(r, 'home-recent-row', false); }).join('');
   Array.prototype.forEach.call(el.querySelectorAll('.home-recent-row'), function(node, idx){
     node.addEventListener('click', function(){
       var r = list[idx];
       if (r) reopenCompany(r.id, r.title);
     });
+  });
+}
+
+// ==================== ИЗБРАННОЕ (D2) ====================
+var FK_FAV_KEY = 'fk_favorites';
+function getFavorites() {
+  var raw = null;
+  try { raw = localStorage.getItem(FK_FAV_KEY); } catch(e) {}
+  var list = [];
+  if (raw) { try { list = JSON.parse(raw) || []; } catch(e) { list = []; } }
+  if (!Array.isArray(list)) list = [];
+  return list.filter(function(r){ return r && r.title; });
+}
+function isFavorite(id) {
+  return getFavorites().some(function(r){ return r.id === id; });
+}
+function saveFavorites(list) {
+  try { localStorage.setItem(FK_FAV_KEY, JSON.stringify(list)); } catch(e) {}
+}
+function toggleFavorite() {
+  if (typeof currentCompany === 'undefined' || !currentCompany || !currentCompany.emitent_title) return;
+  var id = currentCompany.emitent_id;
+  var list = getFavorites();
+  if (list.some(function(r){ return r.id === id; })) {
+    list = list.filter(function(r){ return r.id !== id; });
+  } else {
+    list.unshift({ id: id, title: currentCompany.emitent_title, ticker: currentCompany.primaryTicker, ts: Date.now() });
+    list = list.slice(0, 20);
+  }
+  saveFavorites(list);
+  updateFavBtn();
+  renderFavorites();
+}
+function removeFavorite(id) {
+  saveFavorites(getFavorites().filter(function(r){ return r.id !== id; }));
+  renderFavorites();
+  updateFavBtn();
+}
+function updateFavBtn() {
+  var btn = document.getElementById('prof-fav-btn');
+  if (!btn) return;
+  if (typeof currentCompany === 'undefined' || !currentCompany || !currentCompany.emitent_id) { btn.style.display = 'none'; return; }
+  btn.style.display = '';
+  var on = isFavorite(currentCompany.emitent_id);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.innerHTML = on ? '★ В избранном' : '☆ В избранное';
+  btn.style.color = on ? '#C99A2E' : 'var(--muted)';
+  btn.style.borderColor = on ? '#C99A2E' : 'rgba(255,255,255,0.14)';
+}
+function renderFavorites() {
+  var el = document.getElementById('home-favorites');
+  if (!el) return;
+  var list = getFavorites();
+  if (list.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="margin-top:22px;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 10px;">Избранное</div>'
+    + list.map(function(r){ return companyRow(r, 'home-fav-row', true); }).join('')
+    + '</div>';
+  Array.prototype.forEach.call(el.querySelectorAll('.home-fav-row'), function(node, idx){
+    var r = list[idx];
+    var x = node.querySelector('.fk-row-x');
+    if (x) x.addEventListener('click', function(e){ e.stopPropagation(); if (r) removeFavorite(r.id); });
+    node.addEventListener('click', function(){ if (r) reopenCompany(r.id, r.title); });
   });
 }
 function reopenCompany(id, title) {
@@ -761,6 +831,7 @@ function homeExample(q) {
 }
 document.addEventListener('DOMContentLoaded', function(){
   renderHomeRecent();
+  renderFavorites();
   var hs = document.getElementById('homeSearch');
   if (hs) hs.addEventListener('keydown', function(e){ if (e.key === 'Enter') homeSearchGo(); });
 });
@@ -1167,6 +1238,7 @@ async function loadFundamentals() {
       renderStockScore(currentCompany.primaryTicker, currentCompany.emitent_title);
     }
     if (typeof renderHomeRecent === 'function') renderHomeRecent();
+    if (typeof renderFavorites === 'function') renderFavorites();
   } catch (e) {
     console.error('Supabase load failed', e);
     FUND = FUND || {};
@@ -1784,6 +1856,7 @@ async function loadCompany(emitent_id) {
 
   // Сохраняем как «недавно открытую» для блока на Главной
   if (typeof saveRecentCompany === 'function') saveRecentCompany(currentCompany);
+  if (typeof updateFavBtn === 'function') updateFavBtn();
 }
 
 var HISTORY_CACHE = {};
