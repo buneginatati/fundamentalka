@@ -1780,6 +1780,38 @@ function loadQual() {
 }
 loadQual();
 
+// ==================== Кредитные рейтинги облигаций (snapshot) ====================
+// Источник: smart-lab.ru (агрегация по российским агентствам). Только для отображения.
+var BOND_RATINGS = {}, BOND_RATINGS_META = {};
+(function loadBondRatings(){
+  fetch('bond_ratings.json').then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (j && j.data) { BOND_RATINGS = j.data; BOND_RATINGS_META = { source: j.source||'', updated: j.updated||'', note: j.note||'' }; }
+    }).catch(function(){});
+})();
+
+function bondRatingFor(b) {
+  if (!b) return null;
+  return (b.isin && BOND_RATINGS[b.isin]) || BOND_RATINGS[b.secid] || null;
+}
+// Цвет «светофора» по тиру рейтинга (для облигаций — НЕ конфликт с SHOW_SCORE акций).
+function bondRatingTone(rating) {
+  if (!rating) return null;
+  var r = String(rating).trim().toUpperCase();
+  if (/^A{1,3}[+\-]?$/.test(r) || /^BBB[+\-]?$/.test(r)) return { bg:'#2E8B57', label:'инвест. уровень' }; // green
+  if (/^BB[+\-]?$/.test(r) || /^B[+\-]?$/.test(r))       return { bg:'#C99A2E', label:'спекулятивный' };   // amber
+  if (/^CCC$|^CC$|^C$|^D$/.test(r))                       return { bg:'#B5524A', label:'высокий риск' };    // red
+  return { bg:'#6B7280', label:'' };
+}
+function bondRatingChipHTML(rating) {
+  if (!rating) return '';
+  var t = bondRatingTone(rating) || { bg:'#6B7280' };
+  return '<span class="bond-rating-chip" title="Кредитный рейтинг (агрегация публичных российских агентств, smart-lab)"'
+    + ' style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:9px;background:'
+    + t.bg + ';color:#fff;font-weight:800;font-size:11px;letter-spacing:.02em;margin-left:6px;vertical-align:middle;">'
+    + escHtml(rating) + '</span>';
+}
+
 // тикер в снимке: точное совпадение, иначе преф → база (SBERP → SBER)
 function fundKey(ticker) {
   if (!FUND || !ticker) return null;
@@ -2482,10 +2514,13 @@ function renderBondsList(bonds) {
     var sid = escHtml(b.secid);
     var isin = b.isin ? ' · ISIN ' + escHtml(b.isin) : '';
     var rel = b._relatedTo ? '<span style="color:var(--muted);font-size:10px;font-weight:600;margin-left:6px;">' + escHtml(b._relatedTo).replace(/публичное акционерное общество\s*"?/i, '').replace(/[«»"]/g, '') + '</span>' : '';
+    var rating = (typeof bondRatingFor === 'function') ? bondRatingFor(b) : null;
+    var ratingChip = rating ? bondRatingChipHTML(rating) : '';
     return '<div class="bond-wrap">'
       + '<div class="moex-item" style="cursor:pointer;" onclick="toggleBondFK(this,\'' + sid + '\')">'
       + '<span class="moex-item-name">' + escHtml(b.shortname || b.name || b.secid) + '</span>'
       + '<span class="moex-item-ticker">' + sid + '</span>'
+      + ratingChip
       + rel
       + '<div class="moex-item-details">' + escHtml(b.name || '') + isin + ' &nbsp;<span class="bond-cta">▾ доходность и график</span></div>'
       + '</div>'
@@ -2557,7 +2592,19 @@ async function loadBondFK(sid) {
     var ytm = m.YIELD || m.YIELDATPREVWAPRICE || s.YIELDATPREVWAPRICE;
     var face = s.FACEVALUE, cur = (s.FACEUNIT && !/^(SUR|RUB|RUR)$/i.test(s.FACEUNIT)) ? s.FACEUNIT : '₽';
     function n(v, suf) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + (suf || ''); }
+    // Кредитный рейтинг (если есть в snapshot bond_ratings.json)
+    var rating = (typeof bondRatingFor === 'function') ? bondRatingFor({ secid: sid, isin: s.ISIN || sid }) : null;
+    var tone = rating ? bondRatingTone(rating) : null;
+    var ratingRow = rating ? ('<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:13px;">'
+      + '<span style="color:var(--text-dim);">Кредитный рейтинг'
+      +   (tone && tone.label ? '<span style="display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:1px;">' + escHtml(tone.label) + '</span>' : '')
+      + '</span>'
+      + '<span style="display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:11px;background:'
+      + (tone ? tone.bg : '#6B7280') + ';color:#fff;font-weight:800;font-size:13px;letter-spacing:.02em;">'
+      + escHtml(rating) + '</span></div>') : '';
+    var ratingNote = rating ? '<div style="font-size:10px;color:var(--muted);margin:6px 0 0;line-height:1.45;">Рейтинг — агрегация публичных российских агентств (smart-lab). Информационно, не ИИР.</div>' : '';
     var grid = ''
+      + ratingRow
       + fkRow('Цена', n(price, '% от номинала'))
       + fkRow('Доходность к погашению', n(ytm, '%'))
       + fkRow('Купон', (n(s.COUPONVALUE, ' ' + cur) || '—') + (s.COUPONPERCENT ? ' · ' + n(s.COUPONPERCENT, '%') : ''))
@@ -2565,7 +2612,8 @@ async function loadBondFK(sid) {
       + fkRow('Номинал', n(face, ' ' + cur))
       + fkRow('Погашение', s.MATDATE && s.MATDATE !== '0000-00-00' ? s.MATDATE : null)
       + fkRow('Оферта', s.OFFERDATE && s.OFFERDATE !== '0000-00-00' ? s.OFFERDATE : null)
-      + fkRow('Следующий купон', s.NEXTCOUPON && s.NEXTCOUPON !== '0000-00-00' ? s.NEXTCOUPON : null);
+      + fkRow('Следующий купон', s.NEXTCOUPON && s.NEXTCOUPON !== '0000-00-00' ? s.NEXTCOUPON : null)
+      + ratingNote;
     BOND_FK_PERIOD[sid] = '1Y';
     var btns = BOND_FK_PERIODS.map(function(p) {
       return '<button class="chart-period-btn ' + (p.code === '1Y' ? 'active' : '') + '" onclick="event.stopPropagation();setBondFKPeriod(\'' + sid + '\',\'' + p.code + '\')">' + p.label + '</button>';
